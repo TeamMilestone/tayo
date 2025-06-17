@@ -163,22 +163,18 @@ module Tayo
         return unless File.exist?("Dockerfile")
         
         dockerfile_content = File.read("Dockerfile")
+        original_content = dockerfile_content.dup
         
         # bootsnap precompile 관련 라인들을 찾아서 제거
-        bootsnap_lines = [
-          "# Precompile bootsnap code for faster boot times",
-          "RUN bundle exec bootsnap precompile app/ lib/"
-        ]
-        
-        modified = false
-        bootsnap_lines.each do |line|
-          if dockerfile_content.include?(line)
-            dockerfile_content.gsub!(/^.*#{Regexp.escape(line)}.*\n/, "")
-            modified = true
-          end
+        # 주석과 RUN 명령을 함께 제거
+        if dockerfile_content.include?("bootsnap precompile")
+          # 주석 라인 제거
+          dockerfile_content.gsub!(/^#.*bootsnap.*faster boot times.*\n/i, "")
+          # RUN 명령 제거
+          dockerfile_content.gsub!(/^RUN bundle exec bootsnap precompile.*\n/i, "")
         end
         
-        if modified
+        if dockerfile_content != original_content
           File.write("Dockerfile", dockerfile_content)
           puts "✅ Dockerfile에서 bootsnap precompile 부분을 제거했습니다. (빌드 문제 해결)".colorize(:green)
           puts "   - 이는 알려진 빌드 문제를 방지하기 위함입니다.".colorize(:gray)
