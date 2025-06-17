@@ -136,8 +136,6 @@ module Tayo
       end
       
       def ensure_dockerfile_exists
-        dockerfile_created = false
-        
         unless File.exist?("Dockerfile")
           puts "🐳 Dockerfile이 없습니다. 기본 Dockerfile을 생성합니다...".colorize(:yellow)
           
@@ -145,7 +143,6 @@ module Tayo
           if system("rails app:update:bin")
             system("./bin/rails generate dockerfile")
             puts "✅ Dockerfile이 생성되었습니다.".colorize(:green)
-            dockerfile_created = true
           else
             puts "⚠️  Dockerfile 생성에 실패했습니다. 수동으로 생성해주세요.".colorize(:yellow)
             puts "   다음 명령어를 실행하세요: ./bin/rails generate dockerfile".colorize(:cyan)
@@ -176,6 +173,8 @@ module Tayo
         end
 
         new_content = filtered_lines.join("\n")
+        # 원본 파일이 개행으로 끝났다면 새 파일도 개행으로 끝나도록
+        new_content += "\n" if original_content.end_with?("\n") && !new_content.end_with?("\n")
 
         # 변경된 내용이 있을 경우에만 파일을 다시 씁니다.
         if new_content != original_content
