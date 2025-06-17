@@ -160,43 +160,26 @@ module Tayo
       end
       
       def fix_dockerfile_bootsnap_issue
-        return unless File.exist?("Dockerfile")
-        
-        dockerfile_content = File.read("Dockerfile")
-        original_content = dockerfile_content.dup
-        
-        # Dockerfile을 라인별로 처리
-        lines = dockerfile_content.split("\n")
-        filtered_lines = []
-        skip_next = false
-        
-        lines.each_with_index do |line, index|
-          # bootsnap 관련 주석 찾기
-          if line.match?(/^\s*#.*bootsnap.*faster boot times/i)
-            skip_next = true  # 다음 라인도 제거할 준비
-            next  # 이 라인은 제거
-          end
-          
-          # bootsnap precompile RUN 명령 찾기
-          if line.match?(/^\s*RUN.*bootsnap\s+precompile/i)
-            skip_next = false  # 리셋
-            next  # 이 라인은 제거
-          end
-          
-          # skip_next가 true이고 현재 라인이 RUN bootsnap이면 제거
-          if skip_next && line.match?(/^\s*RUN.*bootsnap/i)
-            skip_next = false
-            next
-          end
-          
-          skip_next = false
-          filtered_lines << line
+        dockerfile_path = "Dockerfile"
+        return unless File.exist?(dockerfile_path)
+
+        original_content = File.read(dockerfile_path)
+        lines = original_content.split("\n")
+
+        # 삭제할 패턴들을 정의합니다.
+        comment_pattern = /^\s*# Precompile bootsnap code for faster boot times/i
+        run_command_pattern = /^\s*RUN bundle exec bootsnap precompile app\/ lib\//i
+
+        # `reject`를 사용해 패턴과 일치하는 줄들을 한번에 제거합니다.
+        filtered_lines = lines.reject do |line|
+          line.match?(comment_pattern) || line.match?(run_command_pattern)
         end
-        
-        new_content = filtered_lines.join("\n") + "\n"
-        
+
+        new_content = filtered_lines.join("\n")
+
+        # 변경된 내용이 있을 경우에만 파일을 다시 씁니다.
         if new_content != original_content
-          File.write("Dockerfile", new_content)
+          File.write(dockerfile_path, new_content)
           puts "✅ Dockerfile에서 bootsnap precompile 부분을 제거했습니다. (빌드 문제 해결)".colorize(:green)
           puts "   - 이는 알려진 빌드 문제를 방지하기 위함입니다.".colorize(:gray)
         end

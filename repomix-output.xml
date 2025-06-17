@@ -1,0 +1,1690 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.claude/
+  settings.local.json
+bin/
+  console
+  setup
+exe/
+  tayo
+lib/
+  tayo/
+    commands/
+      cf.rb
+      gh.rb
+      init.rb
+    cli.rb
+    version.rb
+  tayo.rb
+sig/
+  tayo.rbs
+.gitignore
+Gemfile
+Rakefile
+README.md
+tayo.gemspec
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".claude/settings.local.json">
+{
+  "permissions": {
+    "allow": [
+      "Bash(rg:*)",
+      "Bash(mv:*)",
+      "Bash(bundle update:*)",
+      "Bash(chmod:*)",
+      "Bash(ls:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(rake build)",
+      "Bash(git commit:*)",
+      "Bash(gh repo create:*)",
+      "Bash(gem push:*)",
+      "Bash(gem owner:*)",
+      "Bash(gem signout:*)",
+      "Bash(gem help:*)",
+      "Bash(gem:*)",
+      "Bash(mkdir:*)",
+      "Bash(git push:*)"
+    ],
+    "deny": []
+  }
+}
+</file>
+
+<file path="bin/console">
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "tayo"
+
+# You can add fixtures and/or initialization code here to make experimenting
+# with your gem easier. You can also use a different console, if you like.
+
+require "irb"
+IRB.start(__FILE__)
+</file>
+
+<file path="bin/setup">
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+set -vx
+
+bundle install
+
+# Do any other automated setup that you need to do here
+</file>
+
+<file path="exe/tayo">
+#!/usr/bin/env ruby
+
+require "tayo"
+
+Tayo::CLI.start(ARGV)
+</file>
+
+<file path="lib/tayo/cli.rb">
+# frozen_string_literal: true
+
+require "thor"
+require "colorize"
+require_relative "commands/init"
+require_relative "commands/gh"
+require_relative "commands/cf"
+
+module Tayo
+  class CLI < Thor
+    desc "init", "Rails 프로젝트에 Tayo를 설정합니다"
+    def init
+      Commands::Init.new.execute
+    end
+
+    desc "gh", "GitHub 저장소와 컨테이너 레지스트리를 설정합니다"
+    def gh
+      Commands::Gh.new.execute
+    end
+
+    desc "cf", "Cloudflare DNS를 설정하여 홈서버에 도메인을 연결합니다"
+    def cf
+      Commands::Cf.new.execute
+    end
+
+    desc "version", "Tayo 버전을 표시합니다"
+    def version
+      puts "Tayo #{VERSION}"
+    end
+  end
+end
+</file>
+
+<file path="lib/tayo.rb">
+# frozen_string_literal: true
+
+require_relative "tayo/version"
+require_relative "tayo/cli"
+
+module Tayo
+  class Error < StandardError; end
+end
+</file>
+
+<file path="sig/tayo.rbs">
+module Tayo
+  VERSION: String
+  # See the writing guide of rbs: https://github.com/ruby/rbs#guides
+end
+</file>
+
+<file path=".gitignore">
+*.gem
+*.rbc
+/.config
+/coverage/
+/InstalledFiles
+/pkg/
+/spec/reports/
+/spec/examples.txt
+/test/tmp/
+/test/version_tmp/
+/tmp/
+.DS_Store
+
+# Used by dotenv library to load environment variables.
+# .env
+
+# Ignore Byebug command history file.
+.byebug_history
+
+## Specific to RubyMotion:
+.dat*
+.repl_history
+build/
+*.bridgesupport
+build-iPhoneOS/
+build-iPhoneSimulator/
+
+## Documentation cache and generated files:
+/.yardoc/
+/_yardoc/
+/doc/
+/rdoc/
+
+## Environment normalization:
+/.bundle/
+/vendor/bundle
+/lib/bundler/man/
+
+# for a library or gem, you might want to ignore these files since the code is
+# intended to run in multiple environments; otherwise, check them in:
+# Gemfile.lock
+# .ruby-version
+# .ruby-gemset
+
+# unless supporting rvm < 1.11.0 or doing something fancy, ignore this:
+.rvmrc
+
+# Used by RuboCop. Remote config files pulled in from inherit_from directive.
+# .rubocop-https?--*
+</file>
+
+<file path="Gemfile">
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+# Specify your gem's dependencies in tayo.gemspec
+gemspec
+
+gem "irb"
+gem "rake", "~> 13.0"
+</file>
+
+<file path="Rakefile">
+# frozen_string_literal: true
+
+require "bundler/gem_tasks"
+task default: %i[]
+</file>
+
+<file path="README.md">
+# Tayo
+
+Rails 애플리케이션을 홈서버에 배포하기 위한 도구입니다.
+
+## 설치
+
+시스템 와이드로 설치:
+
+```bash
+gem install tayo
+```
+
+## 사용법
+
+### 1. `tayo init` - Rails 프로젝트 초기화
+
+Rails 프로젝트를 홈서버 배포를 위해 준비합니다.
+
+```bash
+tayo init
+```
+
+이 명령어는 다음 작업들을 수행합니다:
+
+- **OrbStack 설치 확인**: Docker 컨테이너를 실행하기 위한 OrbStack이 설치되어 있는지 확인합니다
+- **Gemfile 수정**: development 그룹에 tayo gem을 추가합니다
+- **Bundle 설치**: 의존성을 설치합니다
+- **Linux 플랫폼 추가**: `x86_64-linux`와 `aarch64-linux` 플랫폼을 Gemfile.lock에 추가합니다
+- **Dockerfile 생성**: Rails 7 기본 Dockerfile이 없으면 생성합니다
+- **Welcome 페이지 생성**: 
+  - `app/controllers/welcome_controller.rb` 컨트롤러 생성
+  - `app/views/welcome/index.html.erb` 뷰 파일 생성 (애니메이션이 있는 예쁜 랜딩 페이지)
+  - `config/routes.rb`에 `root 'welcome#index'` 설정 추가
+- **Git 커밋**: 변경사항을 자동으로 커밋합니다
+- **Docker 캐시 정리**: 디스크 공간 확보를 위해 Docker 캐시를 정리합니다
+
+### 2. `tayo gh` - GitHub 저장소 및 Container Registry 설정
+
+GitHub 저장소를 생성하고 Container Registry를 설정합니다.
+
+```bash
+tayo gh
+```
+
+이 명령어는 다음 작업들을 수행합니다:
+
+- **GitHub CLI 설치 확인**: `gh` 명령어가 설치되어 있는지 확인합니다
+- **GitHub 인증 확인**: 
+  - GitHub에 로그인되어 있는지 확인
+  - 필요한 권한(repo, read:org, write:packages) 확인
+  - 권한이 없으면 브라우저에서 토큰 생성 페이지를 엽니다
+- **Git 저장소 초기화**: 아직 git 저장소가 아니면 초기화합니다
+- **GitHub 원격 저장소 설정**:
+  - 기존 원격 저장소가 있으면 사용
+  - 없으면 새 저장소 생성 (public/private 선택 가능)
+  - 코드를 GitHub에 푸시
+- **GitHub Container Registry 설정**:
+  - Registry URL 생성: `ghcr.io/username/repository-name`
+  - Docker로 자동 로그인 실행
+- **배포 설정 파일 생성**:
+  - `config/deploy.yml` 파일 생성 또는 업데이트
+  - 서버 IP, 도메인, 데이터베이스 등 설정 포함
+- **환경 변수 파일 준비**:
+  - `.env.production` 파일 생성
+  - `.gitignore`에 추가하여 보안 유지
+
+### 3. `tayo cf` - Cloudflare DNS 설정
+
+Cloudflare를 통해 도메인을 홈서버 IP에 연결합니다.
+
+```bash
+tayo cf
+```
+
+이 명령어는 다음 작업들을 수행합니다:
+
+- **설정 파일 확인**: `config/deploy.yml` 파일에서 서버 IP와 도메인 정보를 읽습니다
+- **Cloudflare 인증**:
+  - API 토큰 입력 요청 (처음 실행 시)
+  - 토큰을 안전하게 저장 (macOS Keychain 사용)
+- **도메인 Zone 확인**: 
+  - Cloudflare 계정에서 도메인을 찾습니다
+  - Zone ID를 자동으로 가져옵니다
+- **DNS 레코드 생성/업데이트**:
+  - A 레코드 생성: 도메인을 서버 IP에 연결
+  - 기존 레코드가 있으면 업데이트
+  - Proxied 설정 (Cloudflare CDN 사용)
+- **설정 완료 확인**:
+  - DNS 설정이 완료되면 성공 메시지 표시
+  - 도메인으로 접속 가능함을 안내
+
+각 명령어는 단계별로 진행 상황을 표시하며, 오류가 발생하면 친절한 안내 메시지를 제공합니다.
+
+rails new 로 프로젝트 생성 후 
+bundle exec tayo init
+bundle exec tayo gh
+bundle exec tayo cf
+
+순으로 진행 후
+bin/kamal setup 으로 배포 진행
+</file>
+
+<file path="lib/tayo/commands/cf.rb">
+# frozen_string_literal: true
+
+require "colorize"
+require "tty-prompt"
+require "net/http"
+require "json"
+require "uri"
+
+module Tayo
+  module Commands
+    class Cf
+      def execute
+        puts "☁️  Cloudflare DNS 설정을 시작합니다...".colorize(:green)
+
+        unless rails_project?
+          puts "❌ Rails 프로젝트가 아닙니다. Rails 프로젝트 루트에서 실행해주세요.".colorize(:red)
+          return
+        end
+
+        # 1. 도메인 입력받기
+        domain_info = get_domain_input
+        
+        # 2. Cloudflare 토큰 생성 페이지 열기 및 권한 안내
+        open_token_creation_page
+        
+        # 3. 토큰 입력받기
+        token = get_cloudflare_token
+        
+        # 4. Cloudflare API로 도메인 목록 조회 및 선택
+        selected_zone = select_cloudflare_zone(token)
+        
+        # 5. 루트 도메인 레코드 확인
+        existing_records = check_existing_records(token, selected_zone, domain_info)
+        
+        # 6. DNS 레코드 추가/수정
+        setup_dns_record(token, selected_zone, domain_info, existing_records)
+        
+        # 7. config/deploy.yml 업데이트
+        update_deploy_config(domain_info)
+
+        puts "\n🎉 Cloudflare DNS 설정이 완료되었습니다!".colorize(:green)
+        
+        # 변경사항 커밋
+        commit_cloudflare_changes(domain_info)
+      end
+
+      private
+
+      def rails_project?
+        File.exist?("Gemfile") && File.exist?("config/application.rb")
+      end
+
+      def get_domain_input
+        prompt = TTY::Prompt.new
+        
+        puts "\n📝 배포할 도메인을 설정합니다.".colorize(:yellow)
+        
+        domain = prompt.ask("배포할 도메인을 입력하세요 (예: myapp.com, api.example.com):") do |q|
+          q.validate(/\A[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\z/, "올바른 도메인 형식을 입력해주세요 (예: myapp.com)")
+        end
+        
+        # 도메인이 루트인지 서브도메인인지 판단
+        parts = domain.split('.')
+        if parts.length == 2
+          { type: :root, domain: domain, zone: domain }
+        else
+          zone = parts[-2..-1].join('.')
+          { type: :subdomain, domain: domain, zone: zone, subdomain: parts[0..-3].join('.') }
+        end
+      end
+
+      def open_token_creation_page
+        puts "\n🔑 Cloudflare API 토큰이 필요합니다.".colorize(:yellow)
+        puts "토큰 생성 페이지를 엽니다...".colorize(:cyan)
+        
+        # Cloudflare API 토큰 생성 페이지 열기
+        system("open 'https://dash.cloudflare.com/profile/api-tokens'")
+        
+        puts "\n다음 권한으로 토큰을 생성해주세요:".colorize(:yellow)
+        puts ""
+        puts "한국어 화면:".colorize(:gray)
+        puts "• 영역 → DNS → 읽기".colorize(:white)
+        puts "• 영역 → DNS → 편집".colorize(:white)
+        puts "  (영역 리소스는 '모든 영역' 선택)".colorize(:gray)
+        puts ""
+        puts "English:".colorize(:gray)
+        puts "• Zone → DNS → Read".colorize(:white)
+        puts "• Zone → DNS → Edit".colorize(:white)
+        puts "  (Zone Resources: Select 'All zones')".colorize(:gray)
+        puts ""
+      end
+
+      def get_cloudflare_token
+        prompt = TTY::Prompt.new
+        
+        token = prompt.mask("생성된 Cloudflare API 토큰을 붙여넣으세요:")
+        
+        if token.nil? || token.strip.empty?
+          puts "❌ 토큰이 입력되지 않았습니다.".colorize(:red)
+          exit 1
+        end
+        
+        # 토큰 유효성 간단 확인
+        if test_cloudflare_token(token.strip)
+          puts "✅ 토큰이 확인되었습니다.".colorize(:green)
+          return token.strip
+        else
+          puts "❌ 토큰이 올바르지 않거나 권한이 부족합니다.".colorize(:red)
+          exit 1
+        end
+      end
+
+      def test_cloudflare_token(token)
+        uri = URI('https://api.cloudflare.com/client/v4/user/tokens/verify')
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        
+        request = Net::HTTP::Get.new(uri)
+        request['Authorization'] = "Bearer #{token}"
+        request['Content-Type'] = 'application/json'
+        
+        response = http.request(request)
+        return response.code == '200'
+      rescue
+        return false
+      end
+
+      def select_cloudflare_zone(token)
+        puts "\n🌐 Cloudflare 도메인 목록을 조회합니다...".colorize(:yellow)
+        
+        zones = get_cloudflare_zones(token)
+        
+        if zones.empty?
+          puts "❌ Cloudflare에 등록된 도메인이 없습니다.".colorize(:red)
+          puts "먼저 https://dash.cloudflare.com 에서 도메인을 추가해주세요.".colorize(:cyan)
+          exit 1
+        end
+        
+        prompt = TTY::Prompt.new
+        zone_choices = zones.map { |zone| "#{zone['name']} (#{zone['status']})" }
+        
+        selected = prompt.select("도메인을 선택하세요:", zone_choices)
+        zone_name = selected.split(' ').first
+        
+        selected_zone = zones.find { |zone| zone['name'] == zone_name }
+        puts "✅ 선택된 도메인: #{zone_name}".colorize(:green)
+        
+        return selected_zone
+      end
+
+      def get_cloudflare_zones(token)
+        uri = URI('https://api.cloudflare.com/client/v4/zones')
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        
+        request = Net::HTTP::Get.new(uri)
+        request['Authorization'] = "Bearer #{token}"
+        request['Content-Type'] = 'application/json'
+        
+        response = http.request(request)
+        
+        if response.code == '200'
+          data = JSON.parse(response.body)
+          return data['result'] || []
+        else
+          puts "❌ 도메인 목록 조회에 실패했습니다: #{response.code}".colorize(:red)
+          exit 1
+        end
+      rescue => e
+        puts "❌ API 요청 중 오류가 발생했습니다: #{e.message}".colorize(:red)
+        exit 1
+      end
+
+      def check_existing_records(token, zone, domain_info)
+        puts "\n🔍 기존 DNS 레코드를 확인합니다...".colorize(:yellow)
+        
+        zone_id = zone['id']
+        zone_name = zone['name']
+        
+        # 루트 도메인의 A/CNAME 레코드 확인
+        records = get_dns_records(token, zone_id, zone_name, ['A', 'CNAME'])
+        
+        puts "기존 레코드: #{records.length}개 발견".colorize(:gray)
+        
+        return records
+      end
+
+      def get_dns_records(token, zone_id, name, types)
+        records = []
+        
+        types.each do |type|
+          uri = URI("https://api.cloudflare.com/client/v4/zones/#{zone_id}/dns_records")
+          uri.query = URI.encode_www_form({
+            type: type,
+            name: name
+          })
+          
+          http = Net::HTTP.new(uri.host, uri.port)
+          http.use_ssl = true
+          
+          request = Net::HTTP::Get.new(uri)
+          request['Authorization'] = "Bearer #{token}"
+          request['Content-Type'] = 'application/json'
+          
+          response = http.request(request)
+          
+          if response.code == '200'
+            data = JSON.parse(response.body)
+            records.concat(data['result'] || [])
+          end
+        end
+        
+        return records
+      rescue => e
+        puts "❌ DNS 레코드 조회 중 오류: #{e.message}".colorize(:red)
+        return []
+      end
+
+      def setup_dns_record(token, zone, domain_info, existing_records)
+        puts "\n⚙️  DNS 레코드를 설정합니다...".colorize(:yellow)
+        
+        # 홈서버 IP/URL 입력받기
+        prompt = TTY::Prompt.new
+        
+        server_info = prompt.ask("홈서버 IP 또는 도메인을 입력하세요:") do |q|
+          q.validate(/\A.+\z/, "서버 정보를 입력해주세요")
+        end
+        
+        # SSH 사용자 계정 입력받기
+        ssh_user = prompt.ask("SSH 사용자 계정을 입력하세요:", default: "root")
+        
+        # IP인지 도메인인지 판단
+        is_ip = server_info.match?(/\A\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\z/)
+        record_type = is_ip ? 'A' : 'CNAME'
+        
+        zone_id = zone['id']
+        zone_name = zone['name']
+        
+        # 도메인 정보에 따라 레코드 설정
+        final_domain = determine_final_domain(domain_info, zone_name, existing_records)
+        
+        # 대상 도메인의 모든 A/CNAME 레코드 확인
+        all_records = get_dns_records(token, zone_id, final_domain[:name], ['A', 'CNAME'])
+        
+        if all_records.any?
+          existing_record = all_records.first
+          
+          # 동일한 타입이고 같은 값이면 건너뛰기
+          if existing_record['type'] == record_type && existing_record['content'] == server_info
+            puts "✅ DNS 레코드가 이미 올바르게 설정되어 있습니다.".colorize(:green)
+            puts "   #{final_domain[:full_domain]} → #{server_info} (#{record_type} 레코드)".colorize(:gray)
+          else
+            # 타입이 다르거나 값이 다른 경우 삭제 후 재생성
+            puts "⚠️  기존 레코드를 삭제하고 새로 생성합니다.".colorize(:yellow)
+            puts "   기존: #{existing_record['content']} (#{existing_record['type']}) → 새로운: #{server_info} (#{record_type})".colorize(:gray)
+            
+            # 기존 레코드 삭제
+            delete_dns_record(token, zone_id, existing_record['id'])
+            
+            # 새 레코드 생성
+            create_dns_record(token, zone_id, final_domain[:name], record_type, server_info)
+          end
+        else
+          # DNS 레코드 생성
+          create_dns_record(token, zone_id, final_domain[:name], record_type, server_info)
+        end
+        
+        # 최종 도메인 정보 저장
+        @final_domain = final_domain[:full_domain]
+        @server_info = server_info
+        @ssh_user = ssh_user
+      end
+
+      def determine_final_domain(domain_info, zone_name, existing_records)
+        case domain_info[:type]
+        when :root
+          if existing_records.any?
+            puts "⚠️  루트 도메인에 이미 레코드가 있습니다. app.#{zone_name}을 사용합니다.".colorize(:yellow)
+            { name: "app.#{zone_name}", full_domain: "app.#{zone_name}" }
+          else
+            { name: zone_name, full_domain: zone_name }
+          end
+        when :subdomain
+          { name: domain_info[:domain], full_domain: domain_info[:domain] }
+        end
+      end
+
+      def create_dns_record(token, zone_id, name, type, content)
+        uri = URI("https://api.cloudflare.com/client/v4/zones/#{zone_id}/dns_records")
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        
+        request = Net::HTTP::Post.new(uri)
+        request['Authorization'] = "Bearer #{token}"
+        request['Content-Type'] = 'application/json'
+        
+        data = {
+          type: type,
+          name: name,
+          content: content,
+          ttl: 300
+        }
+        
+        request.body = data.to_json
+        response = http.request(request)
+        
+        if response.code == '200'
+          puts "✅ DNS 레코드가 생성되었습니다.".colorize(:green)
+          puts "   #{name} → #{content} (#{type} 레코드)".colorize(:gray)
+        else
+          puts "❌ DNS 레코드 생성에 실패했습니다: #{response.code}".colorize(:red)
+          puts response.body
+          exit 1
+        end
+      rescue => e
+        puts "❌ DNS 레코드 생성 중 오류: #{e.message}".colorize(:red)
+        exit 1
+      end
+
+      def delete_dns_record(token, zone_id, record_id)
+        uri = URI("https://api.cloudflare.com/client/v4/zones/#{zone_id}/dns_records/#{record_id}")
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        
+        request = Net::HTTP::Delete.new(uri)
+        request['Authorization'] = "Bearer #{token}"
+        request['Content-Type'] = 'application/json'
+        
+        response = http.request(request)
+        
+        if response.code == '200'
+          puts "✅ 기존 DNS 레코드가 삭제되었습니다.".colorize(:green)
+        else
+          puts "❌ DNS 레코드 삭제에 실패했습니다: #{response.code}".colorize(:red)
+          puts response.body
+          exit 1
+        end
+      rescue => e
+        puts "❌ DNS 레코드 삭제 중 오류: #{e.message}".colorize(:red)
+        exit 1
+      end
+
+      def update_deploy_config(domain_info)
+        puts "\n📝 배포 설정을 업데이트합니다...".colorize(:yellow)
+        
+        config_file = "config/deploy.yml"
+        
+        unless File.exist?(config_file)
+          puts "⚠️  config/deploy.yml 파일이 없습니다.".colorize(:yellow)
+          return
+        end
+        
+        content = File.read(config_file)
+        
+        # proxy.host 설정 업데이트
+        if content.include?("proxy:")
+          content.gsub!(/(\s+host:\s+).*$/, "\\1#{@final_domain}")
+        else
+          # proxy 섹션이 없으면 추가
+          proxy_config = "\n# Proxy configuration\nproxy:\n  ssl: true\n  host: #{@final_domain}\n"
+          content += proxy_config
+        end
+        
+        # servers 설정 업데이트
+        if content.match?(/servers:\s*\n\s*web:\s*\n\s*-\s*/)
+          content.gsub!(/(\s*servers:\s*\n\s*web:\s*\n\s*-\s*)[\d.]+/, "\\1#{@server_info}")
+        end
+        
+        # ssh user 설정 업데이트
+        if @ssh_user && @ssh_user != "root"
+          if content.match?(/^ssh:/)
+            # 기존 ssh 섹션 업데이트
+            content.gsub!(/^ssh:\s*\n\s*user:\s*\w+/, "ssh:\n  user: #{@ssh_user}")
+          else
+            # ssh 섹션 추가 (accessories 섹션 앞에 추가)
+            if content.match?(/^# Use accessory services/)
+              content.gsub!(/^# Use accessory services/, "# Use a different ssh user than root\nssh:\n  user: #{@ssh_user}\n\n# Use accessory services")
+            else
+              # 파일 끝에 추가
+              content += "\n# Use a different ssh user than root\nssh:\n  user: #{@ssh_user}\n"
+            end
+          end
+        end
+        
+        File.write(config_file, content)
+        puts "✅ config/deploy.yml이 업데이트되었습니다.".colorize(:green)
+        puts "   proxy.host: #{@final_domain}".colorize(:gray)
+        puts "   servers.web: #{@server_info}".colorize(:gray)
+        puts "   ssh.user: #{@ssh_user}".colorize(:gray) if @ssh_user && @ssh_user != "root"
+      end
+      
+      def commit_cloudflare_changes(domain_info)
+        puts "\n📝 변경사항을 Git에 커밋합니다...".colorize(:yellow)
+        
+        # 변경된 파일이 있는지 확인
+        status_output = `git status --porcelain`.strip
+        
+        if status_output.empty?
+          puts "ℹ️  커밋할 변경사항이 없습니다.".colorize(:yellow)
+          return
+        end
+        
+        # Git add
+        system("git add -A")
+        
+        # Commit 메시지 생성
+        commit_message = "Configure Cloudflare DNS settings\n\n- Setup DNS for domain: #{domain_info[:domain]}\n- Configure server IP: #{domain_info[:server_ip]}\n- Update deployment configuration\n- Add proxy host settings\n\n🤖 Generated with Tayo"
+        
+        # Commit 실행
+        if system("git commit -m \"#{commit_message}\"")
+          puts "✅ 변경사항이 성공적으로 커밋되었습니다.".colorize(:green)
+          
+          # GitHub에 푸시
+          if system("git push", out: File::NULL, err: File::NULL)
+            puts "✅ 변경사항이 GitHub에 푸시되었습니다.".colorize(:green)
+          else
+            puts "⚠️  GitHub 푸시에 실패했습니다. 수동으로 'git push'를 실행해주세요.".colorize(:yellow)
+          end
+        else
+          puts "❌ Git 커밋에 실패했습니다.".colorize(:red)
+        end
+      end
+    end
+  end
+end
+</file>
+
+<file path="lib/tayo/commands/gh.rb">
+# frozen_string_literal: true
+
+require "colorize"
+require "json"
+require "git"
+require "yaml"
+require "tty-prompt"
+
+module Tayo
+  module Commands
+    class Gh
+      def execute
+        puts "🚀 GitHub 저장소 및 컨테이너 레지스트리 설정을 시작합니다...".colorize(:green)
+
+        unless rails_project?
+          puts "❌ Rails 프로젝트가 아닙니다. Rails 프로젝트 루트에서 실행해주세요.".colorize(:red)
+          return
+        end
+
+        puts "\n[1/7] GitHub CLI 설치 확인".colorize(:blue)
+        check_github_cli
+        
+        puts "\n[2/7] GitHub 로그인 확인".colorize(:blue)
+        check_github_auth
+        
+        puts "\n[3/7] 컨테이너 레지스트리 권한 확인".colorize(:blue)
+        check_container_registry_permission
+        
+        puts "\n[4/7] Git 저장소 초기화".colorize(:blue)
+        init_git_repo
+        
+        puts "\n[5/7] GitHub 저장소 생성".colorize(:blue)
+        create_github_repository
+        
+        puts "\n[6/7] 컨테이너 레지스트리 설정".colorize(:blue)
+        create_container_registry
+        
+        puts "\n[7/7] 배포 설정 파일 생성".colorize(:blue)
+        create_deploy_config
+
+        puts "\n🎉 모든 설정이 완료되었습니다!".colorize(:green)
+        puts "\n다음 정보가 설정되었습니다:".colorize(:yellow)
+        puts "• GitHub 저장소: https://github.com/#{@username}/#{@repo_name}".colorize(:cyan)
+        puts "• Container Registry: #{@registry_url}".colorize(:cyan)
+        puts "• 배포 설정: config/deploy.yml".colorize(:cyan)
+        
+        # 변경사항 커밋
+        commit_github_changes
+      end
+
+      private
+
+      def rails_project?
+        File.exist?("Gemfile") && File.exist?("config/application.rb")
+      end
+
+      def check_github_cli
+        if system("gh --version", out: File::NULL, err: File::NULL)
+          puts "✅ GitHub CLI가 이미 설치되어 있습니다.".colorize(:green)
+        else
+          puts "📦 GitHub CLI를 설치합니다...".colorize(:yellow)
+          system("brew install gh")
+          puts "✅ GitHub CLI 설치 완료.".colorize(:green)
+        end
+      end
+
+      def check_github_auth
+        auth_status = `gh auth status 2>&1`
+        
+        unless $?.success?
+          puts "🔑 GitHub 로그인이 필요합니다.".colorize(:yellow)
+          puts "다음 명령어를 실행하여 로그인해주세요:".colorize(:yellow)
+          puts "gh auth login".colorize(:cyan)
+          exit 1
+        end
+        
+        # 토큰 만료 확인
+        if auth_status.include?("Token has expired") || auth_status.include?("authentication failed")
+          puts "⚠️  GitHub 토큰이 만료되었습니다.".colorize(:yellow)
+          puts "다시 로그인해주세요:".colorize(:yellow)
+          puts "gh auth login".colorize(:cyan)
+          exit 1
+        end
+        
+        puts "✅ GitHub에 로그인되어 있습니다.".colorize(:green)
+      end
+
+      def check_container_registry_permission
+        scopes = `gh auth status -t 2>&1`
+        
+        # 토큰 만료 확인 (권한 체크 시에도)
+        if scopes.include?("Token has expired") || scopes.include?("authentication failed")
+          puts "⚠️  GitHub 토큰이 만료되었습니다.".colorize(:yellow)
+          puts "다시 로그인해주세요:".colorize(:yellow)
+          puts "gh auth login".colorize(:cyan)
+          exit 1
+        end
+        
+        unless scopes.include?("write:packages") || scopes.include?("admin:packages")
+          puts "⚠️  컨테이너 레지스트리 권한이 없습니다.".colorize(:yellow)
+          puts "\nTayo가 정상 작동하기 위해 다음 권한들이 필요합니다:".colorize(:yellow)
+          puts "• repo - GitHub 저장소 생성 및 관리".colorize(:yellow)
+          puts "• read:org - 조직 정보 읽기".colorize(:yellow)
+          puts "• write:packages - Docker 이미지를 Container Registry에 푸시".colorize(:yellow)
+          puts "\n토큰 생성 페이지를 엽니다...".colorize(:cyan)
+          
+          project_name = File.basename(Dir.pwd)
+          token_description = "Tayo%20-%20#{project_name}"
+          token_url = "https://github.com/settings/tokens/new?scopes=repo,read:org,write:packages&description=#{token_description}"
+          system("open '#{token_url}'")
+          
+          puts "\n✅ 브라우저에서 GitHub 토큰 생성 페이지가 열렸습니다.".colorize(:green)
+          puts "📌 필요한 권한들이 이미 체크되어 있습니다:".colorize(:green)
+          puts "   • repo - 저장소 생성 및 관리".colorize(:gray)
+          puts "   • read:org - 조직 정보 읽기".colorize(:gray)
+          puts "   • write:packages - Container Registry 접근".colorize(:gray)
+          
+          puts "\n다음 단계를 따라주세요:".colorize(:yellow)
+          puts "1. 페이지 하단의 'Generate token' 버튼을 클릭하세요".colorize(:cyan)
+          puts "2. 생성된 토큰을 복사하세요".colorize(:cyan)
+          puts "3. 아래에 토큰을 붙여넣으세요:".colorize(:cyan)
+          
+          print "\n토큰 입력: ".colorize(:yellow)
+          token = STDIN.gets.chomp
+          
+          if token.empty?
+            puts "❌ 토큰이 입력되지 않았습니다.".colorize(:red)
+            exit 1
+          end
+          
+          # 토큰을 임시 파일에 저장하고 gh auth login 실행
+          require 'tempfile'
+          Tempfile.create('github_token') do |f|
+            f.write(token)
+            f.flush
+            
+            puts "\n🔐 GitHub에 로그인 중...".colorize(:yellow)
+            if system("gh auth login --with-token < #{f.path}")
+              puts "✅ GitHub 로그인에 성공했습니다!".colorize(:green)
+              puts "\n다시 'tayo gh' 명령을 실행해주세요.".colorize(:cyan)
+            else
+              puts "❌ GitHub 로그인에 실패했습니다.".colorize(:red)
+            end
+          end
+          
+          exit 0
+        end
+        
+        puts "✅ 컨테이너 레지스트리 권한이 확인되었습니다.".colorize(:green)
+      end
+
+      def init_git_repo
+        unless Dir.exist?(".git")
+          Git.init(".")
+          puts "✅ Git 저장소를 초기화했습니다.".colorize(:green)
+        else
+          puts "ℹ️  Git 저장소가 이미 초기화되어 있습니다.".colorize(:yellow)
+        end
+
+        git = Git.open(".")
+        
+        # HEAD 커밋이 있는지 확인
+        has_commits = begin
+          git.log.count > 0
+        rescue Git::GitExecuteError
+          false
+        end
+        
+        # git status로 변경사항 확인 (HEAD가 없으면 다른 방법 사용)
+        has_changes = if has_commits
+          git.status.untracked.any? || git.status.changed.any?
+        else
+          # HEAD가 없을 때는 워킹 디렉토리에 파일이 있는지 확인
+          Dir.glob("*", File::FNM_DOTMATCH).reject { |f| f == "." || f == ".." || f == ".git" }.any?
+        end
+        
+        if has_changes
+          git.add(all: true)
+          git.commit("init")
+          puts "✅ 초기 커밋을 생성했습니다.".colorize(:green)
+        else
+          puts "ℹ️  커밋할 변경사항이 없습니다.".colorize(:yellow)
+        end
+      end
+
+      def create_github_repository
+        repo_name = File.basename(Dir.pwd)
+        username = `gh api user -q .login`.strip
+        
+        # 조직 목록 가져오기
+        orgs_json = `gh api user/orgs -q '.[].login' 2>/dev/null`
+        orgs = orgs_json.strip.split("\n").reject(&:empty?)
+        
+        owner = username
+        
+        if orgs.any?
+          prompt = TTY::Prompt.new
+          choices = ["#{username} (개인 계정)"] + orgs.map { |org| "#{org} (조직)" }
+          
+          selection = prompt.select("🏢 저장소를 생성할 위치를 선택하세요:", choices)
+          
+          if selection != "#{username} (개인 계정)"
+            owner = selection.split(" ").first
+          end
+        end
+        
+        # 저장소 존재 여부 확인
+        repo_exists = system("gh repo view #{owner}/#{repo_name}", out: File::NULL, err: File::NULL)
+        
+        if repo_exists
+          puts "ℹ️  GitHub 저장소가 이미 존재합니다: https://github.com/#{owner}/#{repo_name}".colorize(:yellow)
+          @repo_name = repo_name
+          @username = owner
+        else
+          create_cmd = if owner == username
+            "gh repo create #{repo_name} --private --source=. --remote=origin --push"
+          else
+            "gh repo create #{owner}/#{repo_name} --private --source=. --remote=origin --push"
+          end
+          
+          result = system(create_cmd)
+          
+          if result
+            puts "✅ GitHub 저장소를 생성했습니다: https://github.com/#{owner}/#{repo_name}".colorize(:green)
+            @repo_name = repo_name
+            @username = owner
+          else
+            puts "❌ GitHub 저장소 생성에 실패했습니다.".colorize(:red)
+            exit 1
+          end
+        end
+      end
+
+      def create_container_registry
+        # Docker 이미지 태그는 소문자여야 함
+        registry_url = "ghcr.io/#{@username.downcase}/#{@repo_name.downcase}"
+        @registry_url = registry_url
+        
+        puts "✅ 컨테이너 레지스트리가 설정되었습니다.".colorize(:green)
+        puts "   URL: #{registry_url}".colorize(:gray)
+        puts "   ℹ️  컨테이너 레지스트리는 첫 이미지 푸시 시 자동으로 생성됩니다.".colorize(:gray)
+        
+        # Docker로 GitHub Container Registry에 로그인
+        puts "\n🐳 Docker로 GitHub Container Registry에 로그인합니다...".colorize(:yellow)
+        
+        # 현재 GitHub 토큰 가져오기
+        token = `gh auth token`.strip
+        
+        if token.empty?
+          puts "❌ GitHub 토큰을 가져올 수 없습니다.".colorize(:red)
+          return
+        end
+        
+        # Docker login 실행
+        login_cmd = "echo #{token} | docker login ghcr.io -u #{@username} --password-stdin"
+        
+        if system(login_cmd)
+          puts "✅ Docker 로그인에 성공했습니다!".colorize(:green)
+          puts "   Registry: ghcr.io".colorize(:gray)
+          puts "   Username: #{@username}".colorize(:gray)
+        else
+          puts "❌ Docker 로그인에 실패했습니다.".colorize(:red)
+          puts "   수동으로 다음 명령을 실행해주세요:".colorize(:yellow)
+          puts "   docker login ghcr.io".colorize(:cyan)
+        end
+      end
+
+      def create_deploy_config
+        config_dir = "config"
+        Dir.mkdir(config_dir) unless Dir.exist?(config_dir)
+        
+        if File.exist?("config/deploy.yml")
+          puts "ℹ️  기존 config/deploy.yml 파일을 업데이트합니다.".colorize(:yellow)
+          update_kamal_config
+        else
+          puts "✅ config/deploy.yml 파일을 생성했습니다.".colorize(:green)
+          create_tayo_config
+        end
+      end
+
+      private
+
+      def update_kamal_config
+        content = File.read("config/deploy.yml")
+        
+        # 이미지 설정 업데이트 (ghcr.io 중복 제거)
+        # @registry_url은 이미 ghcr.io를 포함하고 있으므로, 그대로 사용
+        content.gsub!(/^image:\s+.*$/, "image: #{@registry_url}")
+        
+        # registry 섹션 업데이트
+        if content.include?("registry:")
+          # 기존 registry 섹션 수정
+          # server 라인이 주석처리되어 있는지 확인
+          if content.match?(/^\s*#\s*server:/)
+            content.gsub!(/^\s*#\s*server:\s*.*$/, "  server: ghcr.io")
+          elsif content.match?(/^\s*server:/)
+            content.gsub!(/^\s*server:\s*.*$/, "  server: ghcr.io")
+          else
+            # server 라인이 없으면 username 위에 추가
+            content.gsub!(/(\s*username:\s+)/, "  server: ghcr.io\n\\1")
+          end
+          # username도 소문자로 변환
+          content.gsub!(/^\s*username:\s+.*$/, "  username: #{@username.downcase}")
+        else
+          # registry 섹션 추가
+          registry_config = "\n# Container registry configuration\nregistry:\n  server: ghcr.io\n  username: #{@username.downcase}\n  password:\n    - KAMAL_REGISTRY_PASSWORD\n"
+          content.gsub!(/^# Credentials for your image host\.\nregistry:.*?^$/m, registry_config)
+        end
+        
+        File.write("config/deploy.yml", content)
+        
+        # GitHub 토큰을 Kamal secrets 파일에 설정
+        setup_kamal_secrets
+        
+        puts "✅ Container Registry 설정이 업데이트되었습니다:".colorize(:green)
+        puts "   • 이미지: #{@registry_url}".colorize(:gray)
+        puts "   • 레지스트리 서버: ghcr.io".colorize(:gray)
+        puts "   • 사용자명: #{@username}".colorize(:gray)
+      end
+      
+      def setup_kamal_secrets
+        # .kamal 디렉토리 생성
+        Dir.mkdir(".kamal") unless Dir.exist?(".kamal")
+        
+        # 현재 GitHub 토큰 가져오기
+        token_output = `gh auth token 2>/dev/null`
+        
+        if $?.success? && !token_output.strip.empty?
+          token = token_output.strip
+          secrets_file = ".kamal/secrets"
+          
+          # 기존 secrets 파일 읽기 (있다면)
+          existing_content = File.exist?(secrets_file) ? File.read(secrets_file) : ""
+          
+          # KAMAL_REGISTRY_PASSWORD가 이미 있는지 확인
+          if existing_content.include?("KAMAL_REGISTRY_PASSWORD")
+            # 기존 값 업데이트
+            updated_content = existing_content.gsub(/^KAMAL_REGISTRY_PASSWORD=.*$/, "KAMAL_REGISTRY_PASSWORD=#{token}")
+          else
+            # 새로 추가
+            updated_content = existing_content.empty? ? "KAMAL_REGISTRY_PASSWORD=#{token}\n" : "#{existing_content.chomp}\nKAMAL_REGISTRY_PASSWORD=#{token}\n"
+          end
+          
+          File.write(secrets_file, updated_content)
+          puts "✅ GitHub 토큰이 .kamal/secrets에 설정되었습니다.".colorize(:green)
+          
+          # .gitignore에 secrets 파일 추가
+          add_to_gitignore(".kamal/secrets")
+        else
+          puts "⚠️  GitHub 토큰을 가져올 수 없습니다. 수동으로 설정해주세요:".colorize(:yellow)
+          puts "   echo 'KAMAL_REGISTRY_PASSWORD=your_github_token' >> .kamal/secrets".colorize(:cyan)
+        end
+      end
+      
+      def add_to_gitignore(file_path)
+        gitignore_file = ".gitignore"
+        
+        if File.exist?(gitignore_file)
+          content = File.read(gitignore_file)
+          unless content.include?(file_path)
+            File.write(gitignore_file, "#{content.chomp}\n#{file_path}\n")
+            puts "✅ .gitignore에 #{file_path}를 추가했습니다.".colorize(:green)
+          end
+        else
+          File.write(gitignore_file, "#{file_path}\n")
+          puts "✅ .gitignore 파일을 생성하고 #{file_path}를 추가했습니다.".colorize(:green)
+        end
+      end
+
+      def create_tayo_config
+        deploy_config = {
+          "production" => {
+            "registry" => @registry_url,
+            "repository" => "https://github.com/#{@username}/#{@repo_name}",
+            "server" => {
+              "host" => "your-home-server.local",
+              "user" => "deploy",
+              "port" => 22
+            },
+            "environment" => {
+              "RAILS_ENV" => "production",
+              "RAILS_MASTER_KEY" => "your-master-key"
+            }
+          }
+        }
+        
+        File.write("config/deploy.yml", deploy_config.to_yaml)
+        puts "   ⚠️  서버 정보와 환경 변수를 설정해주세요.".colorize(:yellow)
+      end
+      
+      def commit_github_changes
+        puts "\n📝 변경사항을 Git에 커밋합니다...".colorize(:yellow)
+        
+        # 변경된 파일이 있는지 확인
+        status_output = `git status --porcelain`.strip
+        
+        if status_output.empty?
+          puts "ℹ️  커밋할 변경사항이 없습니다.".colorize(:yellow)
+          return
+        end
+        
+        # Git add
+        system("git add -A")
+        
+        # Commit 메시지 생성
+        commit_message = "Add GitHub Container Registry configuration\n\n- Setup GitHub repository: #{@repo_name}\n- Configure container registry: #{@registry_url}\n- Add deployment configuration files\n- Setup environment variables\n\n🤖 Generated with Tayo"
+        
+        # Commit 실행
+        if system("git commit -m \"#{commit_message}\"")
+          puts "✅ 변경사항이 성공적으로 커밋되었습니다.".colorize(:green)
+          
+          # GitHub에 푸시
+          if system("git push", out: File::NULL, err: File::NULL)
+            puts "✅ 변경사항이 GitHub에 푸시되었습니다.".colorize(:green)
+          else
+            puts "⚠️  GitHub 푸시에 실패했습니다. 수동으로 'git push'를 실행해주세요.".colorize(:yellow)
+          end
+        else
+          puts "❌ Git 커밋에 실패했습니다.".colorize(:red)
+        end
+      end
+    end
+  end
+end
+</file>
+
+<file path="tayo.gemspec">
+# frozen_string_literal: true
+
+require_relative "lib/tayo/version"
+
+Gem::Specification.new do |spec|
+  spec.name = "tayo"
+  spec.version = Tayo::VERSION
+  spec.authors = ["이원섭wonsup Lee/Alfonso"]
+  spec.email = ["onesup.lee@gmail.com"]
+
+  spec.summary = "Rails deployment tool for home servers"
+  spec.description = "Tayo is a deployment tool for Rails applications to home servers using GitHub Container Registry and Cloudflare CLI."
+  spec.homepage = "https://github.com/TeamMilestone/tayo"
+  spec.required_ruby_version = ">= 3.1.0"
+
+  spec.metadata["homepage_uri"] = spec.homepage
+  spec.metadata["source_code_uri"] = "https://github.com/TeamMilestone/tayo"
+  spec.metadata["changelog_uri"] = "https://github.com/TeamMilestone/tayo/blob/main/CHANGELOG.md"
+
+  # Specify which files should be added to the gem when it is released.
+  # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
+  gemspec = File.basename(__FILE__)
+  spec.files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
+    ls.readlines("\x0", chomp: true).reject do |f|
+      (f == gemspec) ||
+        f.start_with?(*%w[bin/ test/ spec/ features/ .git appveyor Gemfile])
+    end
+  end
+  spec.bindir = "exe"
+  spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
+  spec.require_paths = ["lib"]
+
+  spec.add_dependency "thor", "~> 1.3"
+  spec.add_dependency "git", "~> 1.18"
+  spec.add_dependency "colorize", "~> 1.1"
+  spec.add_dependency "tty-prompt", "~> 0.23"
+
+  # For more information and examples about making a new gem, check out our
+  # guide at: https://bundler.io/guides/creating_gem.html
+end
+</file>
+
+<file path="lib/tayo/commands/init.rb">
+# frozen_string_literal: true
+
+require "colorize"
+
+module Tayo
+  module Commands
+    class Init
+      def execute
+        puts "🏠 Tayo 초기화를 시작합니다...".colorize(:green)
+
+        unless rails_project?
+          puts "❌ Rails 프로젝트가 아닙니다. Rails 프로젝트 루트에서 실행해주세요.".colorize(:red)
+          return
+        end
+
+        check_orbstack
+        add_to_gemfile
+        bundle_install
+        add_linux_platform
+        create_welcome_page
+        commit_changes
+        clear_docker_cache
+        
+        puts "✅ Tayo가 성공적으로 설정되었습니다!".colorize(:green)
+      end
+
+      private
+
+      def rails_project?
+        File.exist?("Gemfile") && File.exist?("config/application.rb")
+      end
+
+      def check_orbstack
+        puts "🐳 OrbStack 상태를 확인합니다...".colorize(:yellow)
+        
+        # OrbStack 실행 상태 확인
+        orbstack_running = system("pgrep -x OrbStack > /dev/null 2>&1")
+        
+        if orbstack_running
+          puts "✅ OrbStack이 실행 중입니다.".colorize(:green)
+        else
+          puts "🚀 OrbStack을 시작합니다...".colorize(:yellow)
+          
+          # OrbStack 실행
+          if system("open -a OrbStack")
+            puts "✅ OrbStack이 시작되었습니다.".colorize(:green)
+            
+            # OrbStack이 완전히 시작될 때까지 잠시 대기
+            print "Docker 서비스가 준비될 때까지 대기 중".colorize(:yellow)
+            5.times do
+              sleep 1
+              print ".".colorize(:yellow)
+            end
+            puts ""
+            
+            # Docker가 준비되었는지 확인
+            if system("docker ps > /dev/null 2>&1")
+              puts "✅ Docker가 준비되었습니다.".colorize(:green)
+            else
+              puts "⚠️  Docker가 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요.".colorize(:yellow)
+            end
+          else
+            puts "❌ OrbStack을 시작할 수 없습니다.".colorize(:red)
+            puts "OrbStack이 설치되어 있는지 확인해주세요.".colorize(:yellow)
+            puts "https://orbstack.dev 에서 다운로드할 수 있습니다.".colorize(:cyan)
+          end
+        end
+      end
+
+      def add_to_gemfile
+        gemfile_content = File.read("Gemfile")
+        
+        if gemfile_content.include?("tayo")
+          puts "ℹ️  Tayo가 이미 Gemfile에 있습니다.".colorize(:yellow)
+          return
+        end
+
+        development_group = gemfile_content.match(/group :development do\n(.*?)\nend/m)
+        
+        if development_group
+          updated_content = gemfile_content.sub(
+            /group :development do\n/,
+            "group :development do\n  gem 'tayo'\n"
+          )
+        else
+          updated_content = gemfile_content + "\n\ngroup :development do\n  gem 'tayo'\nend\n"
+        end
+
+        File.write("Gemfile", updated_content)
+        puts "✅ Gemfile에 Tayo를 추가했습니다.".colorize(:green)
+      end
+
+      def bundle_install
+        puts "📦 bundle install을 실행합니다...".colorize(:yellow)
+        system("bundle install")
+      end
+
+      def add_linux_platform
+        puts "🐧 Linux 플랫폼을 확인하고 추가합니다...".colorize(:yellow)
+        
+        # Gemfile.lock 파일 확인
+        unless File.exist?("Gemfile.lock")
+          puts "⚠️  Gemfile.lock 파일이 없습니다. bundle install을 먼저 실행해주세요.".colorize(:yellow)
+          return
+        end
+        
+        gemfile_lock_content = File.read("Gemfile.lock")
+        platforms_needed = []
+        
+        # 필요한 플랫폼 확인
+        unless gemfile_lock_content.include?("x86_64-linux")
+          platforms_needed << "x86_64-linux"
+        end
+        
+        unless gemfile_lock_content.include?("aarch64-linux")
+          platforms_needed << "aarch64-linux"
+        end
+        
+        if platforms_needed.empty?
+          puts "✅ 필요한 Linux 플랫폼이 이미 추가되어 있습니다.".colorize(:green)
+          return
+        end
+        
+        # 플랫폼 추가
+        platforms_needed.each do |platform|
+          puts "📦 #{platform} 플랫폼을 추가합니다...".colorize(:yellow)
+          if system("bundle lock --add-platform #{platform}")
+            puts "✅ #{platform} 플랫폼이 추가되었습니다.".colorize(:green)
+          else
+            puts "❌ #{platform} 플랫폼 추가에 실패했습니다.".colorize(:red)
+          end
+        end
+        
+        # Dockerfile 확인 및 생성
+        ensure_dockerfile_exists
+      end
+      
+      def ensure_dockerfile_exists
+        dockerfile_created = false
+        
+        unless File.exist?("Dockerfile")
+          puts "🐳 Dockerfile이 없습니다. 기본 Dockerfile을 생성합니다...".colorize(:yellow)
+          
+          # Rails 7의 기본 Dockerfile 생성
+          if system("rails app:update:bin")
+            system("./bin/rails generate dockerfile")
+            puts "✅ Dockerfile이 생성되었습니다.".colorize(:green)
+            dockerfile_created = true
+          else
+            puts "⚠️  Dockerfile 생성에 실패했습니다. 수동으로 생성해주세요.".colorize(:yellow)
+            puts "   다음 명령어를 실행하세요: ./bin/rails generate dockerfile".colorize(:cyan)
+            return
+          end
+        else
+          puts "✅ Dockerfile이 이미 존재합니다.".colorize(:green)
+        end
+        
+        # Dockerfile에서 bootsnap precompile 부분 제거 (빌드 문제 해결)
+        fix_dockerfile_bootsnap_issue
+      end
+      
+      def fix_dockerfile_bootsnap_issue
+        return unless File.exist?("Dockerfile")
+        
+        dockerfile_content = File.read("Dockerfile")
+        original_content = dockerfile_content.dup
+        
+        # Dockerfile을 라인별로 처리
+        lines = dockerfile_content.split("\n")
+        filtered_lines = []
+        skip_next = false
+        
+        lines.each_with_index do |line, index|
+          # bootsnap 관련 주석 찾기
+          if line.match?(/^\s*#.*bootsnap.*faster boot times/i)
+            skip_next = true  # 다음 라인도 제거할 준비
+            next  # 이 라인은 제거
+          end
+          
+          # bootsnap precompile RUN 명령 찾기
+          if line.match?(/^\s*RUN.*bootsnap\s+precompile/i)
+            skip_next = false  # 리셋
+            next  # 이 라인은 제거
+          end
+          
+          # skip_next가 true이고 현재 라인이 RUN bootsnap이면 제거
+          if skip_next && line.match?(/^\s*RUN.*bootsnap/i)
+            skip_next = false
+            next
+          end
+          
+          skip_next = false
+          filtered_lines << line
+        end
+        
+        new_content = filtered_lines.join("\n") + "\n"
+        
+        if new_content != original_content
+          File.write("Dockerfile", new_content)
+          puts "✅ Dockerfile에서 bootsnap precompile 부분을 제거했습니다. (빌드 문제 해결)".colorize(:green)
+          puts "   - 이는 알려진 빌드 문제를 방지하기 위함입니다.".colorize(:gray)
+        end
+      end
+
+      def create_welcome_page
+        # Welcome 컨트롤러가 이미 있는지 확인
+        if File.exist?("app/controllers/welcome_controller.rb")
+          puts "ℹ️  Welcome 페이지가 이미 존재합니다.".colorize(:yellow)
+          @welcome_page_created = false
+          return
+        end
+        
+        puts "🎨 Welcome 페이지를 생성합니다...".colorize(:yellow)
+        
+        # Welcome 컨트롤러 생성
+        system("rails generate controller Welcome index --skip-routes --no-helper --no-assets")
+        
+        # 프로젝트 이름 가져오기
+        project_name = File.basename(Dir.pwd).gsub(/[-_]/, ' ').split.map(&:capitalize).join(' ')
+        
+        # Welcome 페이지 HTML 생성
+        welcome_html = <<~HTML
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>#{project_name} - Welcome</title>
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+              }
+              .container {
+                text-align: center;
+                padding: 2rem;
+                max-width: 800px;
+                animation: fadeIn 1s ease-out;
+              }
+              h1 {
+                font-size: 4rem;
+                margin-bottom: 1rem;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                animation: slideDown 0.8s ease-out;
+              }
+              .subtitle {
+                font-size: 1.5rem;
+                margin-bottom: 3rem;
+                opacity: 0.9;
+                animation: slideUp 0.8s ease-out 0.2s both;
+              }
+              .info-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 2rem;
+                margin-top: 3rem;
+              }
+              .info-card {
+                background: rgba(255,255,255,0.1);
+                backdrop-filter: blur(10px);
+                padding: 2rem;
+                border-radius: 10px;
+                border: 1px solid rgba(255,255,255,0.2);
+                animation: fadeIn 0.8s ease-out 0.4s both;
+              }
+              .info-card h3 {
+                font-size: 1.2rem;
+                margin-bottom: 0.5rem;
+              }
+              .info-card p {
+                opacity: 0.8;
+                font-size: 0.9rem;
+              }
+              .deploy-badge {
+                display: inline-block;
+                background: rgba(255,255,255,0.2);
+                padding: 0.5rem 1rem;
+                border-radius: 20px;
+                margin-top: 2rem;
+                font-size: 0.9rem;
+                animation: pulse 2s infinite;
+              }
+              @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+              }
+              @keyframes slideDown {
+                from { opacity: 0; transform: translateY(-30px); }
+                to { opacity: 1; transform: translateY(0); }
+              }
+              @keyframes slideUp {
+                from { opacity: 0; transform: translateY(30px); }
+                to { opacity: 1; transform: translateY(0); }
+              }
+              @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.8; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>🏠 #{project_name}</h1>
+              <p class="subtitle">Welcome to your Tayo-powered Rails application!</p>
+              
+              <div class="info-grid">
+                <div class="info-card">
+                  <h3>📦 Container Ready</h3>
+                  <p>Your app is configured for container deployment</p>
+                </div>
+                <div class="info-card">
+                  <h3>🚀 GitHub Integration</h3>
+                  <p>Ready to push to GitHub Container Registry</p>
+                </div>
+                <div class="info-card">
+                  <h3>☁️ Cloudflare DNS</h3>
+                  <p>Domain management simplified</p>
+                </div>
+              </div>
+              
+              <div class="deploy-badge">
+                Deployed with Tayo 🎉
+              </div>
+            </div>
+          </body>
+          </html>
+        HTML
+        
+        # Welcome 뷰 파일에 저장
+        welcome_view_path = "app/views/welcome/index.html.erb"
+        File.write(welcome_view_path, welcome_html)
+        
+        # routes.rb 업데이트
+        routes_file = "config/routes.rb"
+        routes_content = File.read(routes_file)
+        
+        # root 경로 설정 - welcome#index가 이미 있는지 확인
+        unless routes_content.include?("welcome#index")
+          if routes_content.match?(/^\s*root\s+/)
+            # 기존 root 설정이 있으면 교체
+            routes_content.gsub!(/^\s*root\s+.*$/, "  root 'welcome#index'")
+          else
+            # root 설정이 없으면 추가
+            routes_content.gsub!(/Rails\.application\.routes\.draw do\s*\n/, "Rails.application.routes.draw do\n  root 'welcome#index'\n")
+          end
+          
+          File.write(routes_file, routes_content)
+          puts "   ✅ routes.rb에 root 경로를 설정했습니다.".colorize(:green)
+        else
+          puts "   ℹ️  routes.rb에 welcome#index가 이미 설정되어 있습니다.".colorize(:yellow)
+        end
+        
+        puts "✅ Welcome 페이지가 생성되었습니다!".colorize(:green)
+        puts "   경로: /".colorize(:gray)
+        puts "   컨트롤러: app/controllers/welcome_controller.rb".colorize(:gray)
+        puts "   뷰: app/views/welcome/index.html.erb".colorize(:gray)
+        
+        @welcome_page_created = true
+      end
+
+      def commit_changes
+        # Git 저장소인지 확인
+        unless Dir.exist?(".git")
+          puts "⚠️  Git 저장소가 아닙니다. 커밋을 건너뜁니다.".colorize(:yellow)
+          return
+        end
+        
+        # Welcome 페이지가 새로 생성된 경우에만 커밋
+        unless @welcome_page_created
+          puts "ℹ️  새로운 변경사항이 없어 커밋을 건너뜁니다.".colorize(:yellow)
+          return
+        end
+        
+        puts "📝 변경사항을 Git에 커밋합니다...".colorize(:yellow)
+        
+        # Git 상태 확인
+        git_status = `git status --porcelain`
+        
+        if git_status.strip.empty?
+          puts "ℹ️  커밋할 변경사항이 없습니다.".colorize(:yellow)
+          return
+        end
+        
+        # 변경사항 스테이징
+        system("git add .")
+        
+        # 커밋
+        commit_message = "Add Tayo configuration and Welcome page"
+        if system("git commit -m '#{commit_message}'")
+          puts "✅ 변경사항이 커밋되었습니다.".colorize(:green)
+          puts "   커밋 메시지: #{commit_message}".colorize(:gray)
+        else
+          puts "⚠️  커밋에 실패했습니다.".colorize(:yellow)
+        end
+      end
+
+      def clear_docker_cache
+        puts "🧹 Docker 캐시를 정리합니다...".colorize(:yellow)
+        
+        # Docker system prune
+        if system("docker system prune -f > /dev/null 2>&1")
+          puts "✅ Docker 시스템 캐시가 정리되었습니다.".colorize(:green)
+        else
+          puts "⚠️  Docker 시스템 정리에 실패했습니다.".colorize(:yellow)
+        end
+        
+        # Kamal build cache clear
+        if File.exist?("config/deploy.yml")
+          puts "🚢 Kamal 빌드 캐시를 정리합니다...".colorize(:yellow)
+          if system("kamal build --clear-cache > /dev/null 2>&1")
+            puts "✅ Kamal 빌드 캐시가 정리되었습니다.".colorize(:green)
+          else
+            puts "⚠️  Kamal 빌드 캐시 정리에 실패했습니다.".colorize(:yellow)
+          end
+        end
+      end
+    end
+  end
+end
+</file>
+
+<file path="lib/tayo/version.rb">
+# frozen_string_literal: true
+
+module Tayo
+  VERSION = "0.1.5"
+end
+</file>
+
+</files>
