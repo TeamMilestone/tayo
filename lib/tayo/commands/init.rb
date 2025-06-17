@@ -165,17 +165,38 @@ module Tayo
         dockerfile_content = File.read("Dockerfile")
         original_content = dockerfile_content.dup
         
-        # bootsnap precompile 관련 라인들을 찾아서 제거
-        # 주석과 RUN 명령을 함께 제거
-        if dockerfile_content.include?("bootsnap precompile")
-          # 주석 라인 제거
-          dockerfile_content.gsub!(/^#.*bootsnap.*faster boot times.*\n/i, "")
-          # RUN 명령 제거
-          dockerfile_content.gsub!(/^RUN bundle exec bootsnap precompile.*\n/i, "")
+        # Dockerfile을 라인별로 처리
+        lines = dockerfile_content.split("\n")
+        filtered_lines = []
+        skip_next = false
+        
+        lines.each_with_index do |line, index|
+          # bootsnap 관련 주석 찾기
+          if line.match?(/^\s*#.*bootsnap.*faster boot times/i)
+            skip_next = true  # 다음 라인도 제거할 준비
+            next  # 이 라인은 제거
+          end
+          
+          # bootsnap precompile RUN 명령 찾기
+          if line.match?(/^\s*RUN.*bootsnap\s+precompile/i)
+            skip_next = false  # 리셋
+            next  # 이 라인은 제거
+          end
+          
+          # skip_next가 true이고 현재 라인이 RUN bootsnap이면 제거
+          if skip_next && line.match?(/^\s*RUN.*bootsnap/i)
+            skip_next = false
+            next
+          end
+          
+          skip_next = false
+          filtered_lines << line
         end
         
-        if dockerfile_content != original_content
-          File.write("Dockerfile", dockerfile_content)
+        new_content = filtered_lines.join("\n") + "\n"
+        
+        if new_content != original_content
+          File.write("Dockerfile", new_content)
           puts "✅ Dockerfile에서 bootsnap precompile 부분을 제거했습니다. (빌드 문제 해결)".colorize(:green)
           puts "   - 이는 알려진 빌드 문제를 방지하기 위함입니다.".colorize(:gray)
         end
