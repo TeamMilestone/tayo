@@ -10,12 +10,12 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Rails deployment tool for home servers"
   spec.description = "Tayo is a deployment tool for Rails applications to home servers using GitHub Container Registry and Cloudflare CLI."
-  spec.homepage = "https://github.com/onesup/tayo"
+  spec.homepage = "https://github.com/TeamMilestone/tayo"
   spec.required_ruby_version = ">= 3.1.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/onesup/tayo"
-  spec.metadata["changelog_uri"] = "https://github.com/onesup/tayo/blob/main/CHANGELOG.md"
+  spec.metadata["source_code_uri"] = "https://github.com/TeamMilestone/tayo"
+  spec.metadata["changelog_uri"] = "https://github.com/TeamMilestone/tayo/blob/main/CHANGELOG.md"
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
