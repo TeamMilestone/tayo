@@ -136,6 +136,8 @@ module Tayo
       end
       
       def ensure_dockerfile_exists
+        dockerfile_created = false
+        
         unless File.exist?("Dockerfile")
           puts "🐳 Dockerfile이 없습니다. 기본 Dockerfile을 생성합니다...".colorize(:yellow)
           
@@ -143,12 +145,43 @@ module Tayo
           if system("rails app:update:bin")
             system("./bin/rails generate dockerfile")
             puts "✅ Dockerfile이 생성되었습니다.".colorize(:green)
+            dockerfile_created = true
           else
             puts "⚠️  Dockerfile 생성에 실패했습니다. 수동으로 생성해주세요.".colorize(:yellow)
             puts "   다음 명령어를 실행하세요: ./bin/rails generate dockerfile".colorize(:cyan)
+            return
           end
         else
           puts "✅ Dockerfile이 이미 존재합니다.".colorize(:green)
+        end
+        
+        # Dockerfile에서 bootsnap precompile 부분 제거 (빌드 문제 해결)
+        fix_dockerfile_bootsnap_issue
+      end
+      
+      def fix_dockerfile_bootsnap_issue
+        return unless File.exist?("Dockerfile")
+        
+        dockerfile_content = File.read("Dockerfile")
+        
+        # bootsnap precompile 관련 라인들을 찾아서 제거
+        bootsnap_lines = [
+          "# Precompile bootsnap code for faster boot times",
+          "RUN bundle exec bootsnap precompile app/ lib/"
+        ]
+        
+        modified = false
+        bootsnap_lines.each do |line|
+          if dockerfile_content.include?(line)
+            dockerfile_content.gsub!(/^.*#{Regexp.escape(line)}.*\n/, "")
+            modified = true
+          end
+        end
+        
+        if modified
+          File.write("Dockerfile", dockerfile_content)
+          puts "✅ Dockerfile에서 bootsnap precompile 부분을 제거했습니다. (빌드 문제 해결)".colorize(:green)
+          puts "   - 이는 알려진 빌드 문제를 방지하기 위함입니다.".colorize(:gray)
         end
       end
 
