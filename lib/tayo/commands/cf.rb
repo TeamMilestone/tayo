@@ -39,6 +39,9 @@ module Tayo
         update_deploy_config(domain_info)
 
         puts "\n🎉 Cloudflare DNS 설정이 완료되었습니다!".colorize(:green)
+        
+        # 변경사항 커밋
+        commit_cloudflare_changes(domain_info)
       end
 
       private
@@ -384,6 +387,38 @@ module Tayo
         puts "   proxy.host: #{@final_domain}".colorize(:gray)
         puts "   servers.web: #{@server_info}".colorize(:gray)
         puts "   ssh.user: #{@ssh_user}".colorize(:gray) if @ssh_user && @ssh_user != "root"
+      end
+      
+      def commit_cloudflare_changes(domain_info)
+        puts "\n📝 변경사항을 Git에 커밋합니다...".colorize(:yellow)
+        
+        # 변경된 파일이 있는지 확인
+        status_output = `git status --porcelain`.strip
+        
+        if status_output.empty?
+          puts "ℹ️  커밋할 변경사항이 없습니다.".colorize(:yellow)
+          return
+        end
+        
+        # Git add
+        system("git add -A")
+        
+        # Commit 메시지 생성
+        commit_message = "Configure Cloudflare DNS settings\n\n- Setup DNS for domain: #{domain_info[:domain]}\n- Configure server IP: #{domain_info[:server_ip]}\n- Update deployment configuration\n- Add proxy host settings\n\n🤖 Generated with Tayo"
+        
+        # Commit 실행
+        if system("git commit -m \"#{commit_message}\"")
+          puts "✅ 변경사항이 성공적으로 커밋되었습니다.".colorize(:green)
+          
+          # GitHub에 푸시
+          if system("git push", out: File::NULL, err: File::NULL)
+            puts "✅ 변경사항이 GitHub에 푸시되었습니다.".colorize(:green)
+          else
+            puts "⚠️  GitHub 푸시에 실패했습니다. 수동으로 'git push'를 실행해주세요.".colorize(:yellow)
+          end
+        else
+          puts "❌ Git 커밋에 실패했습니다.".colorize(:red)
+        end
       end
     end
   end

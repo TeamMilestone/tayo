@@ -43,6 +43,9 @@ module Tayo
         puts "• GitHub 저장소: https://github.com/#{@username}/#{@repo_name}".colorize(:cyan)
         puts "• Container Registry: #{@registry_url}".colorize(:cyan)
         puts "• 배포 설정: config/deploy.yml".colorize(:cyan)
+        
+        # 변경사항 커밋
+        commit_github_changes
       end
 
       private
@@ -383,6 +386,38 @@ module Tayo
         
         File.write("config/deploy.yml", deploy_config.to_yaml)
         puts "   ⚠️  서버 정보와 환경 변수를 설정해주세요.".colorize(:yellow)
+      end
+      
+      def commit_github_changes
+        puts "\n📝 변경사항을 Git에 커밋합니다...".colorize(:yellow)
+        
+        # 변경된 파일이 있는지 확인
+        status_output = `git status --porcelain`.strip
+        
+        if status_output.empty?
+          puts "ℹ️  커밋할 변경사항이 없습니다.".colorize(:yellow)
+          return
+        end
+        
+        # Git add
+        system("git add -A")
+        
+        # Commit 메시지 생성
+        commit_message = "Add GitHub Container Registry configuration\n\n- Setup GitHub repository: #{@repo_name}\n- Configure container registry: #{@registry_url}\n- Add deployment configuration files\n- Setup environment variables\n\n🤖 Generated with Tayo"
+        
+        # Commit 실행
+        if system("git commit -m \"#{commit_message}\"")
+          puts "✅ 변경사항이 성공적으로 커밋되었습니다.".colorize(:green)
+          
+          # GitHub에 푸시
+          if system("git push", out: File::NULL, err: File::NULL)
+            puts "✅ 변경사항이 GitHub에 푸시되었습니다.".colorize(:green)
+          else
+            puts "⚠️  GitHub 푸시에 실패했습니다. 수동으로 'git push'를 실행해주세요.".colorize(:yellow)
+          end
+        else
+          puts "❌ Git 커밋에 실패했습니다.".colorize(:red)
+        end
       end
     end
   end
