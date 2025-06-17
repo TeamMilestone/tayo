@@ -6,7 +6,7 @@ module Tayo
   module Commands
     class Init
       def execute
-        puts "🏠 Tayo 초기화를 시작합니다...".colorize(:green)
+        puts "🏠 Tayo v#{Tayo::VERSION} 초기화를 시작합니다...".colorize(:green)
 
         unless rails_project?
           puts "❌ Rails 프로젝트가 아닙니다. Rails 프로젝트 루트에서 실행해주세요.".colorize(:red)
@@ -167,6 +167,23 @@ module Tayo
         comment_pattern = /^\s*# Precompile bootsnap code for faster boot times/i
         run_command_pattern = /^\s*RUN bundle exec bootsnap precompile app\/ lib\//i
 
+        # 디버깅: 매칭되는 라인 확인
+        debug_matches = false
+        if ENV['TAYO_DEBUG'] == 'true'
+          debug_matches = true
+          puts "🔍 Dockerfile 디버깅 모드".colorize(:yellow)
+          puts "   전체 라인 수: #{lines.length}"
+          lines.each_with_index do |line, index|
+            if line.match?(comment_pattern)
+              puts "   주석 매치 (라인 #{index + 1}): #{line.strip}"
+            elsif line.match?(run_command_pattern)
+              puts "   RUN 매치 (라인 #{index + 1}): #{line.strip}"
+            elsif line.include?("bootsnap")
+              puts "   기타 bootsnap (라인 #{index + 1}): #{line.strip}"
+            end
+          end
+        end
+
         # `reject`를 사용해 패턴과 일치하는 줄들을 한번에 제거합니다.
         filtered_lines = lines.reject do |line|
           line.match?(comment_pattern) || line.match?(run_command_pattern)
@@ -178,9 +195,22 @@ module Tayo
 
         # 변경된 내용이 있을 경우에만 파일을 다시 씁니다.
         if new_content != original_content
+          removed_lines = lines.length - filtered_lines.length
           File.write(dockerfile_path, new_content)
           puts "✅ Dockerfile에서 bootsnap precompile 부분을 제거했습니다. (빌드 문제 해결)".colorize(:green)
+          puts "   - 제거된 라인 수: #{removed_lines}".colorize(:gray)
           puts "   - 이는 알려진 빌드 문제를 방지하기 위함입니다.".colorize(:gray)
+          
+          if debug_matches
+            puts "   남은 bootsnap 라인:".colorize(:yellow)
+            filtered_lines.each_with_index do |line, index|
+              if line.include?("bootsnap")
+                puts "     라인 #{index + 1}: #{line.strip}"
+              end
+            end
+          end
+        elsif debug_matches
+          puts "ℹ️  제거할 bootsnap 라인이 없습니다.".colorize(:yellow)
         end
       end
 
