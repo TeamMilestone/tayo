@@ -23,7 +23,6 @@ tayo init
 이 명령어는 다음 작업들을 수행합니다:
 
 - **OrbStack 설치 확인**: Docker 컨테이너를 실행하기 위한 OrbStack이 설치되어 있는지 확인합니다
-- **Gemfile 수정**: development 그룹에 tayo gem을 추가합니다
 - **Bundle 설치**: 의존성을 설치합니다
 - **Linux 플랫폼 추가**: `x86_64-linux`와 `aarch64-linux` 플랫폼을 Gemfile.lock에 추가합니다
 - **Dockerfile 생성**: Rails 7 기본 Dockerfile이 없으면 생성합니다

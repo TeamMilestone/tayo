@@ -13,15 +13,13 @@ module Tayo
           puts "❌ Rails 프로젝트가 아닙니다. Rails 프로젝트 루트에서 실행해주세요.".colorize(:red)
           return
         end
-
+        commit_initial_state
         check_orbstack
-        add_to_gemfile
-        bundle_install
-        add_linux_platform
-        create_welcome_page
-        commit_changes
+        create_welcome_page        
         clear_docker_cache
-        
+        ensure_dockerfile_exists
+        disable_bootsnap_in_dockerfile
+        commit_changes
         puts "✅ Tayo가 성공적으로 설정되었습니다!".colorize(:green)
       end
 
@@ -67,74 +65,6 @@ module Tayo
           end
         end
       end
-
-      def add_to_gemfile
-        gemfile_content = File.read("Gemfile")
-        
-        if gemfile_content.include?("tayo")
-          puts "ℹ️  Tayo가 이미 Gemfile에 있습니다.".colorize(:yellow)
-          return
-        end
-
-        development_group = gemfile_content.match(/group :development do\n(.*?)\nend/m)
-        
-        if development_group
-          updated_content = gemfile_content.sub(
-            /group :development do\n/,
-            "group :development do\n  gem 'tayo'\n"
-          )
-        else
-          updated_content = gemfile_content + "\n\ngroup :development do\n  gem 'tayo'\nend\n"
-        end
-
-        File.write("Gemfile", updated_content)
-        puts "✅ Gemfile에 Tayo를 추가했습니다.".colorize(:green)
-      end
-
-      def bundle_install
-        puts "📦 bundle install을 실행합니다...".colorize(:yellow)
-        system("bundle install")
-      end
-
-      def add_linux_platform
-        puts "🐧 Linux 플랫폼을 확인하고 추가합니다...".colorize(:yellow)
-        
-        # Gemfile.lock 파일 확인
-        unless File.exist?("Gemfile.lock")
-          puts "⚠️  Gemfile.lock 파일이 없습니다. bundle install을 먼저 실행해주세요.".colorize(:yellow)
-          return
-        end
-        
-        gemfile_lock_content = File.read("Gemfile.lock")
-        platforms_needed = []
-        
-        # 필요한 플랫폼 확인
-        unless gemfile_lock_content.include?("x86_64-linux")
-          platforms_needed << "x86_64-linux"
-        end
-        
-        unless gemfile_lock_content.include?("aarch64-linux")
-          platforms_needed << "aarch64-linux"
-        end
-        
-        if platforms_needed.empty?
-          puts "✅ 필요한 Linux 플랫폼이 이미 추가되어 있습니다.".colorize(:green)
-          return
-        end
-        
-        # 플랫폼 추가
-        platforms_needed.each do |platform|
-          puts "📦 #{platform} 플랫폼을 추가합니다...".colorize(:yellow)
-          if system("bundle lock --add-platform #{platform}")
-            puts "✅ #{platform} 플랫폼이 추가되었습니다.".colorize(:green)
-          else
-            puts "❌ #{platform} 플랫폼 추가에 실패했습니다.".colorize(:red)
-          end
-        end
-        
-        # Dockerfile 확인 및 생성
-        ensure_dockerfile_exists
-      end
       
       def ensure_dockerfile_exists
         unless File.exist?("Dockerfile")
@@ -151,10 +81,7 @@ module Tayo
           end
         else
           puts "✅ Dockerfile이 이미 존재합니다.".colorize(:green)
-        end
-        
-        # Dockerfile에서 bootsnap 부분 비활성화 (빌드 문제 해결)
-        disable_bootsnap_in_dockerfile
+        end        
       end
       
       def disable_bootsnap_in_dockerfile
@@ -328,20 +255,14 @@ module Tayo
         @welcome_page_created = true
       end
 
-      def commit_changes
+      def commit_initial_state
         # Git 저장소인지 확인
         unless Dir.exist?(".git")
           puts "⚠️  Git 저장소가 아닙니다. 커밋을 건너뜁니다.".colorize(:yellow)
           return
         end
         
-        # Welcome 페이지가 새로 생성된 경우에만 커밋
-        unless @welcome_page_created
-          puts "ℹ️  새로운 변경사항이 없어 커밋을 건너뜁니다.".colorize(:yellow)
-          return
-        end
-        
-        puts "📝 변경사항을 Git에 커밋합니다...".colorize(:yellow)
+        puts "📝 초기 상태를 Git에 커밋합니다...".colorize(:yellow)
         
         # Git 상태 확인
         git_status = `git status --porcelain`
@@ -355,9 +276,39 @@ module Tayo
         system("git add .")
         
         # 커밋
-        commit_message = "Add Tayo configuration and Welcome page"
+        commit_message = "Save current state before Tayo initialization"
         if system("git commit -m '#{commit_message}'")
-          puts "✅ 변경사항이 커밋되었습니다.".colorize(:green)
+          puts "✅ 초기 상태가 커밋되었습니다.".colorize(:green)
+          puts "   커밋 메시지: #{commit_message}".colorize(:gray)
+        else
+          puts "⚠️  커밋에 실패했습니다.".colorize(:yellow)
+        end
+      end
+
+      def commit_changes
+        # Git 저장소인지 확인
+        unless Dir.exist?(".git")
+          puts "⚠️  Git 저장소가 아닙니다. 커밋을 건너뜁니다.".colorize(:yellow)
+          return
+        end
+        
+        puts "📝 Tayo 설정 완료 상태를 Git에 커밋합니다...".colorize(:yellow)
+        
+        # Git 상태 확인
+        git_status = `git status --porcelain`
+        
+        if git_status.strip.empty?
+          puts "ℹ️  커밋할 변경사항이 없습니다.".colorize(:yellow)
+          return
+        end
+        
+        # 변경사항 스테이징
+        system("git add .")
+        
+        # 커밋
+        commit_message = "Complete Tayo initialization with Welcome page and Docker setup"
+        if system("git commit -m '#{commit_message}'")
+          puts "✅ Tayo 설정이 완료되어 커밋되었습니다.".colorize(:green)
           puts "   커밋 메시지: #{commit_message}".colorize(:gray)
         else
           puts "⚠️  커밋에 실패했습니다.".colorize(:yellow)
