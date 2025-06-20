@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "colorize"
-require_relative "../dockerfile_modifier"
+# require_relative "../dockerfile_modifier"
 
 module Tayo
   module Commands
@@ -17,8 +17,7 @@ module Tayo
         check_orbstack
         create_welcome_page        
         clear_docker_cache
-        ensure_dockerfile_exists
-        disable_bootsnap_in_dockerfile
+        ensure_dockerfile_exists        
         commit_changes
         puts "✅ Tayo가 성공적으로 설정되었습니다!".colorize(:green)
       end
@@ -82,16 +81,6 @@ module Tayo
         else
           puts "✅ Dockerfile이 이미 존재합니다.".colorize(:green)
         end        
-      end
-      
-      def disable_bootsnap_in_dockerfile
-        puts "🔧 Dockerfile에서 bootsnap을 비활성화합니다...".colorize(:yellow)
-        begin
-          modifier = DockerfileModifier.new
-          modifier.init
-        rescue => e
-          puts "⚠️  Dockerfile 수정 중 오류가 발생했습니다: #{e.message}".colorize(:yellow)
-        end
       end
 
       def create_welcome_page
