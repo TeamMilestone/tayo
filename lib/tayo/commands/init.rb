@@ -15,10 +15,9 @@ module Tayo
         end
         commit_initial_state
         check_orbstack
-        create_welcome_page        
+        create_welcome_page
         clear_docker_cache
         ensure_dockerfile_exists
-        disable_bootsnap_in_dockerfile
         commit_changes
         puts "✅ Tayo가 성공적으로 설정되었습니다!".colorize(:green)
       end
@@ -31,19 +30,19 @@ module Tayo
 
       def check_orbstack
         puts "🐳 OrbStack 상태를 확인합니다...".colorize(:yellow)
-        
+
         # OrbStack 실행 상태 확인
         orbstack_running = system("pgrep -x OrbStack > /dev/null 2>&1")
-        
+
         if orbstack_running
           puts "✅ OrbStack이 실행 중입니다.".colorize(:green)
         else
           puts "🚀 OrbStack을 시작합니다...".colorize(:yellow)
-          
+
           # OrbStack 실행
           if system("open -a OrbStack")
             puts "✅ OrbStack이 시작되었습니다.".colorize(:green)
-            
+
             # OrbStack이 완전히 시작될 때까지 잠시 대기
             print "Docker 서비스가 준비될 때까지 대기 중".colorize(:yellow)
             5.times do
@@ -51,7 +50,7 @@ module Tayo
               print ".".colorize(:yellow)
             end
             puts ""
-            
+
             # Docker가 준비되었는지 확인
             if system("docker ps > /dev/null 2>&1")
               puts "✅ Docker가 준비되었습니다.".colorize(:green)
@@ -65,11 +64,11 @@ module Tayo
           end
         end
       end
-      
+
       def ensure_dockerfile_exists
         unless File.exist?("Dockerfile")
           puts "🐳 Dockerfile이 없습니다. 기본 Dockerfile을 생성합니다...".colorize(:yellow)
-          
+
           # Rails 7의 기본 Dockerfile 생성
           if system("rails app:update:bin")
             system("./bin/rails generate dockerfile")
@@ -81,16 +80,6 @@ module Tayo
           end
         else
           puts "✅ Dockerfile이 이미 존재합니다.".colorize(:green)
-        end        
-      end
-      
-      def disable_bootsnap_in_dockerfile
-        puts "🔧 Dockerfile에서 bootsnap을 비활성화합니다...".colorize(:yellow)
-        begin
-          modifier = DockerfileModifier.new
-          modifier.init
-        rescue => e
-          puts "⚠️  Dockerfile 수정 중 오류가 발생했습니다: #{e.message}".colorize(:yellow)
         end
       end
 
@@ -101,15 +90,15 @@ module Tayo
           @welcome_page_created = false
           return
         end
-        
+
         puts "🎨 Welcome 페이지를 생성합니다...".colorize(:yellow)
-        
+
         # Welcome 컨트롤러 생성
         system("rails generate controller Welcome index --skip-routes --no-helper --no-assets")
-        
+
         # 프로젝트 이름 가져오기
         project_name = File.basename(Dir.pwd).gsub(/[-_]/, ' ').split.map(&:capitalize).join(' ')
-        
+
         # Welcome 페이지 HTML 생성
         welcome_html = <<~HTML
           <!DOCTYPE html>
@@ -199,7 +188,7 @@ module Tayo
             <div class="container">
               <h1>🏠 #{project_name}</h1>
               <p class="subtitle">Welcome to your Tayo-powered Rails application!</p>
-              
+
               <div class="info-grid">
                 <div class="info-card">
                   <h3>📦 Container Ready</h3>
@@ -214,7 +203,7 @@ module Tayo
                   <p>Domain management simplified</p>
                 </div>
               </div>
-              
+
               <div class="deploy-badge">
                 Deployed with Tayo 🎉
               </div>
@@ -222,15 +211,15 @@ module Tayo
           </body>
           </html>
         HTML
-        
+
         # Welcome 뷰 파일에 저장
         welcome_view_path = "app/views/welcome/index.html.erb"
         File.write(welcome_view_path, welcome_html)
-        
+
         # routes.rb 업데이트
         routes_file = "config/routes.rb"
         routes_content = File.read(routes_file)
-        
+
         # root 경로 설정 - welcome#index가 이미 있는지 확인
         unless routes_content.include?("welcome#index")
           if routes_content.match?(/^\s*root\s+/)
@@ -240,18 +229,18 @@ module Tayo
             # root 설정이 없으면 추가
             routes_content.gsub!(/Rails\.application\.routes\.draw do\s*\n/, "Rails.application.routes.draw do\n  root 'welcome#index'\n")
           end
-          
+
           File.write(routes_file, routes_content)
           puts "   ✅ routes.rb에 root 경로를 설정했습니다.".colorize(:green)
         else
           puts "   ℹ️  routes.rb에 welcome#index가 이미 설정되어 있습니다.".colorize(:yellow)
         end
-        
+
         puts "✅ Welcome 페이지가 생성되었습니다!".colorize(:green)
         puts "   경로: /".colorize(:gray)
         puts "   컨트롤러: app/controllers/welcome_controller.rb".colorize(:gray)
         puts "   뷰: app/views/welcome/index.html.erb".colorize(:gray)
-        
+
         @welcome_page_created = true
       end
 
@@ -261,20 +250,20 @@ module Tayo
           puts "⚠️  Git 저장소가 아닙니다. 커밋을 건너뜁니다.".colorize(:yellow)
           return
         end
-        
+
         puts "📝 초기 상태를 Git에 커밋합니다...".colorize(:yellow)
-        
+
         # Git 상태 확인
         git_status = `git status --porcelain`
-        
+
         if git_status.strip.empty?
           puts "ℹ️  커밋할 변경사항이 없습니다.".colorize(:yellow)
           return
         end
-        
+
         # 변경사항 스테이징
         system("git add .")
-        
+
         # 커밋
         commit_message = "Save current state before Tayo initialization"
         if system("git commit -m '#{commit_message}'")
@@ -291,20 +280,20 @@ module Tayo
           puts "⚠️  Git 저장소가 아닙니다. 커밋을 건너뜁니다.".colorize(:yellow)
           return
         end
-        
+
         puts "📝 Tayo 설정 완료 상태를 Git에 커밋합니다...".colorize(:yellow)
-        
+
         # Git 상태 확인
         git_status = `git status --porcelain`
-        
+
         if git_status.strip.empty?
           puts "ℹ️  커밋할 변경사항이 없습니다.".colorize(:yellow)
           return
         end
-        
+
         # 변경사항 스테이징
         system("git add .")
-        
+
         # 커밋
         commit_message = "Complete Tayo initialization with Welcome page and Docker setup"
         if system("git commit -m '#{commit_message}'")
@@ -317,14 +306,14 @@ module Tayo
 
       def clear_docker_cache
         puts "🧹 Docker 캐시를 정리합니다...".colorize(:yellow)
-        
+
         # Docker system prune
         if system("docker system prune -f > /dev/null 2>&1")
           puts "✅ Docker 시스템 캐시가 정리되었습니다.".colorize(:green)
         else
           puts "⚠️  Docker 시스템 정리에 실패했습니다.".colorize(:yellow)
         end
-        
+
         # Kamal build cache clear
         if File.exist?("config/deploy.yml")
           puts "🚢 Kamal 빌드 캐시를 정리합니다...".colorize(:yellow)

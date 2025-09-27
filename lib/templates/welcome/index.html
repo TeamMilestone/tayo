@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tayo Proxy - Welcome</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+            animation: fadeIn 1s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            font-size: 5em;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1.3em;
+            opacity: 0.95;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .status {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            margin-top: 30px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 600;
+        }
+
+        .status-value {
+            opacity: 0.9;
+        }
+
+        .status-ok {
+            color: #4ade80;
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 30px;
+            font-size: 0.9em;
+            opacity: 0.85;
+        }
+
+        .footer {
+            margin-top: 50px;
+            font-size: 0.85em;
+            opacity: 0.7;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            transition: border-color 0.3s;
+        }
+
+        .footer a:hover {
+            border-bottom-color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🚀</div>
+        <h1>Tayo Proxy</h1>
+        <p class="subtitle">
+            홈서버 프록시 서비스가 정상적으로 작동 중입니다<br>
+            Your home server proxy is running successfully
+        </p>
+
+        <div class="status">
+            <div class="status-item">
+                <span class="status-label">프록시 상태</span>
+                <span class="status-value status-ok">✓ 활성</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Kamal Proxy</span>
+                <span class="status-value status-ok">✓ 실행 중</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Caddy Server</span>
+                <span class="status-value status-ok">✓ 실행 중</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">SSL/TLS</span>
+                <span class="status-value status-ok">✓ 준비됨</span>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <strong>💡 다음 단계:</strong><br>
+            이제 실제 애플리케이션을 3000 포트에 배포하면<br>
+            이 페이지 대신 애플리케이션이 표시됩니다.
+        </div>
+
+        <div class="footer">
+            <p>
+                Powered by <a href="https://github.com/TeamMilestone/tayo" target="_blank">Tayo</a> |
+                <a href="https://kamal-deploy.org" target="_blank">Kamal</a> |
+                <a href="https://caddyserver.com" target="_blank">Caddy</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // 현재 시간 표시 (옵션)
+        const updateTime = () => {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ko-KR');
+            // 시간 표시 기능이 필요한 경우 활성화
+        };
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+</body>
+</html>

@@ -1,9 +1,10 @@
 PATH
   remote: .
   specs:
-    tayo (0.1.6)
+    tayo (0.1.11)
       colorize (~> 1.1)
       git (~> 1.18)
+      logger (~> 1.6)
       thor (~> 1.3)
       tty-prompt (~> 0.23)
 
@@ -23,6 +24,7 @@ GEM
       pp (>= 0.6.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
+    logger (1.7.0)
     minitest (5.25.5)
     pastel (0.8.0)
       tty-color (~> 0.5)

@@ -34,6 +34,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "git", "~> 1.18"
   spec.add_dependency "colorize", "~> 1.1"
   spec.add_dependency "tty-prompt", "~> 0.23"
+  spec.add_dependency "logger", "~> 1.6"
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html

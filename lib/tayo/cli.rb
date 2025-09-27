@@ -5,6 +5,7 @@ require "colorize"
 require_relative "commands/init"
 require_relative "commands/gh"
 require_relative "commands/cf"
+require_relative "commands/proxy"
 
 module Tayo
   class CLI < Thor
@@ -21,6 +22,11 @@ module Tayo
     desc "cf", "Cloudflare DNS를 설정하여 홈서버에 도메인을 연결합니다"
     def cf
       Commands::Cf.new.execute
+    end
+
+    desc "proxy", "Traefik을 설정하여 도메인 라우팅과 SSL을 관리합니다"
+    def proxy
+      Commands::Proxy.new.execute
     end
 
     desc "version", "Tayo 버전을 표시합니다"
