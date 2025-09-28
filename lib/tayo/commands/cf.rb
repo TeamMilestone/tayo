@@ -12,11 +12,6 @@ module Tayo
       def execute
         puts "☁️  Cloudflare DNS 설정을 시작합니다...".colorize(:green)
 
-        unless rails_project?
-          puts "❌ Rails 프로젝트가 아닙니다. Rails 프로젝트 루트에서 실행해주세요.".colorize(:red)
-          return
-        end
-
         # 1. 도메인 입력받기
         domain_info = get_domain_input
         
@@ -45,10 +40,6 @@ module Tayo
       end
 
       private
-
-      def rails_project?
-        File.exist?("Gemfile") && File.exist?("config/application.rb")
-      end
 
       def get_domain_input
         prompt = TTY::Prompt.new

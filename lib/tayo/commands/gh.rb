@@ -12,11 +12,6 @@ module Tayo
       def execute
         puts "🚀 GitHub 저장소 및 컨테이너 레지스트리 설정을 시작합니다...".colorize(:green)
 
-        unless rails_project?
-          puts "❌ Rails 프로젝트가 아닙니다. Rails 프로젝트 루트에서 실행해주세요.".colorize(:red)
-          return
-        end
-
         puts "\n[1/7] GitHub CLI 설치 확인".colorize(:blue)
         check_github_cli
         
@@ -49,10 +44,6 @@ module Tayo
       end
 
       private
-
-      def rails_project?
-        File.exist?("Gemfile") && File.exist?("config/application.rb")
-      end
 
       def check_github_cli
         if system("gh --version", out: File::NULL, err: File::NULL)
