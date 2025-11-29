@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    tayo (0.2.0)
+    tayo (0.2.3)
       colorize (~> 1.1)
       git (~> 1.18)
       logger (~> 1.6)

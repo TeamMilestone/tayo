@@ -6,6 +6,7 @@ require_relative "commands/init"
 require_relative "commands/gh"
 require_relative "commands/cf"
 require_relative "commands/proxy"
+require_relative "commands/sqlite"
 
 module Tayo
   class CLI < Thor
@@ -27,6 +28,11 @@ module Tayo
     desc "proxy", "Traefik을 설정하여 도메인 라우팅과 SSL을 관리합니다"
     def proxy
       Commands::Proxy.new.execute
+    end
+
+    desc "sqlite", "SQLite + Solid Cable 최적화 설정을 적용합니다"
+    def sqlite
+      Commands::Sqlite.new.execute
     end
 
     desc "version", "Tayo 버전을 표시합니다"
