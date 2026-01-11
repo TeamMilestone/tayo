@@ -5,20 +5,22 @@ require "tty-prompt"
 require "net/http"
 require "json"
 require "uri"
+require "fileutils"
+require "yaml"
 
 module Tayo
   module Commands
     class Cf
+      CLOUDFLARE_TOKEN_FILE = File.expand_path("~/.config/tayo/cloudflare_token")
+      SERVER_CONFIG_FILE = File.expand_path("~/.config/tayo/server.yml")
+
       def execute
         puts "☁️  Cloudflare DNS 설정을 시작합니다...".colorize(:green)
 
-        # 1. Cloudflare 토큰 생성 페이지 열기 및 권한 안내
-        open_token_creation_page
+        # 1. Cloudflare 인증 확인 (저장된 토큰 확인 또는 새로 입력)
+        token = check_cloudflare_auth
 
-        # 2. 토큰 입력받기
-        token = get_cloudflare_token
-
-        # 3. Cloudflare API로 도메인 목록 조회 및 선택
+        # 2. Cloudflare API로 도메인 목록 조회 및 선택
         selected_zone = select_cloudflare_zone(token)
 
         # 4. 기존 레코드 목록 표시
@@ -67,13 +69,27 @@ module Tayo
       def get_server_info
         prompt = TTY::Prompt.new
 
-        puts "\n🖥️  홈서버 연결 정보를 입력합니다.".colorize(:yellow)
+        puts "\n🖥️  홈서버 연결 정보를 확인합니다.".colorize(:yellow)
 
-        server_address = prompt.ask("홈서버 IP 또는 도메인을 입력하세요:") do |q|
-          q.validate(/\A.+\z/, "서버 정보를 입력해주세요")
+        # 저장된 서버 정보 확인
+        saved_config = load_server_config
+
+        if saved_config
+          puts "\n저장된 홈서버 정보:".colorize(:cyan)
+          puts "   • 서버: #{saved_config['server_address']}".colorize(:white)
+          puts "   • SSH 사용자: #{saved_config['ssh_user']}".colorize(:white)
+
+          if prompt.yes?("\n이 정보를 사용하시겠습니까?")
+            server_address = saved_config['server_address']
+            ssh_user = saved_config['ssh_user']
+          else
+            server_address, ssh_user = prompt_server_info(prompt)
+            save_server_config(server_address, ssh_user)
+          end
+        else
+          server_address, ssh_user = prompt_server_info(prompt)
+          save_server_config(server_address, ssh_user)
         end
-
-        ssh_user = prompt.ask("SSH 사용자 계정을 입력하세요:", default: "root")
 
         # IP인지 도메인인지 판단
         is_ip = server_address.match?(/\A\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\z/)
@@ -86,13 +102,79 @@ module Tayo
         }
       end
 
-      def open_token_creation_page
+      def prompt_server_info(prompt)
+        server_address = prompt.ask("홈서버 IP 또는 도메인을 입력하세요:") do |q|
+          q.validate(/\A.+\z/, "서버 정보를 입력해주세요")
+        end
+
+        ssh_user = prompt.ask("SSH 사용자 계정을 입력하세요:", default: "root")
+
+        [server_address, ssh_user]
+      end
+
+      def load_server_config
+        return nil unless File.exist?(SERVER_CONFIG_FILE)
+
+        config = YAML.load_file(SERVER_CONFIG_FILE)
+        return nil unless config.is_a?(Hash)
+        return nil unless config['server_address'] && config['ssh_user']
+
+        config
+      rescue
+        nil
+      end
+
+      def save_server_config(server_address, ssh_user)
+        dir = File.dirname(SERVER_CONFIG_FILE)
+        FileUtils.mkdir_p(dir) unless Dir.exist?(dir)
+
+        config = {
+          'server_address' => server_address,
+          'ssh_user' => ssh_user
+        }
+
+        File.write(SERVER_CONFIG_FILE, config.to_yaml)
+        File.chmod(0600, SERVER_CONFIG_FILE)
+
+        puts "✅ 홈서버 정보가 저장되었습니다.".colorize(:green)
+      end
+
+      def check_cloudflare_auth
+        # 1. 환경변수에서 토큰 확인
+        token = ENV['CLOUDFLARE_API_TOKEN']
+        if token && !token.strip.empty?
+          if test_cloudflare_token(token.strip)
+            puts "✅ Cloudflare에 로그인되어 있습니다. (환경변수)".colorize(:green)
+            return token.strip
+          else
+            puts "⚠️  환경변수의 Cloudflare 토큰이 유효하지 않습니다.".colorize(:yellow)
+          end
+        end
+
+        # 2. 저장된 파일에서 토큰 확인
+        if File.exist?(CLOUDFLARE_TOKEN_FILE)
+          token = File.read(CLOUDFLARE_TOKEN_FILE).strip
+          if !token.empty? && test_cloudflare_token(token)
+            puts "✅ Cloudflare에 로그인되어 있습니다.".colorize(:green)
+            return token
+          else
+            puts "⚠️  저장된 Cloudflare 토큰이 유효하지 않습니다.".colorize(:yellow)
+          end
+        end
+
+        # 3. 새 토큰 요청
+        request_new_cloudflare_token
+      end
+
+      def request_new_cloudflare_token
+        prompt = TTY::Prompt.new
+
         puts "\n🔑 Cloudflare API 토큰이 필요합니다.".colorize(:yellow)
         puts "토큰 생성 페이지를 엽니다...".colorize(:cyan)
-        
+
         # Cloudflare API 토큰 생성 페이지 열기
         system("open 'https://dash.cloudflare.com/profile/api-tokens'")
-        
+
         puts "\n다음 권한으로 토큰을 생성해주세요:".colorize(:yellow)
         puts ""
         puts "한국어 화면:".colorize(:gray)
@@ -103,26 +185,35 @@ module Tayo
         puts "• Zone → DNS → Edit".colorize(:white)
         puts "  (Zone Resources: Select 'All zones')".colorize(:gray)
         puts ""
-      end
 
-      def get_cloudflare_token
-        prompt = TTY::Prompt.new
-        
         token = prompt.mask("생성된 Cloudflare API 토큰을 붙여넣으세요:")
-        
+
         if token.nil? || token.strip.empty?
           puts "❌ 토큰이 입력되지 않았습니다.".colorize(:red)
           exit 1
         end
-        
-        # 토큰 유효성 간단 확인
-        if test_cloudflare_token(token.strip)
-          puts "✅ 토큰이 확인되었습니다.".colorize(:green)
-          return token.strip
+
+        token = token.strip
+
+        # 토큰 유효성 확인
+        if test_cloudflare_token(token)
+          save_cloudflare_token(token)
+          puts "✅ 토큰이 확인되고 저장되었습니다.".colorize(:green)
+          return token
         else
           puts "❌ 토큰이 올바르지 않거나 권한이 부족합니다.".colorize(:red)
           exit 1
         end
+      end
+
+      def save_cloudflare_token(token)
+        # 디렉토리 생성
+        dir = File.dirname(CLOUDFLARE_TOKEN_FILE)
+        FileUtils.mkdir_p(dir) unless Dir.exist?(dir)
+
+        # 토큰 저장 (파일 권한 600으로 설정)
+        File.write(CLOUDFLARE_TOKEN_FILE, token)
+        File.chmod(0600, CLOUDFLARE_TOKEN_FILE)
       end
 
       def test_cloudflare_token(token)
@@ -373,13 +464,29 @@ module Tayo
 
         content = File.read(config_file)
 
-        # proxy.host 설정 업데이트
-        if content.include?("proxy:")
-          content.gsub!(/(\s+host:\s+).*$/, "\\1#{final_domain}")
+        # proxy 섹션 설정
+        # 1. 활성화된 proxy 섹션이 있는지 확인 (줄 시작이 'proxy:'인 경우)
+        # 2. 주석 처리된 proxy 섹션이 있으면 활성화
+        # 3. 없으면 새로 추가
+        if content.match?(/^proxy:\s*$/m)
+          # 활성화된 proxy 섹션이 있음 - host 값만 업데이트
+          content.gsub!(/^(proxy:\s*\n\s*ssl:\s*true\s*\n\s*host:\s*)\S+/, "\\1#{final_domain}")
+        elsif content.match?(/^# proxy:\s*$/m)
+          # 주석 처리된 proxy 섹션이 있음 - 주석 해제하고 값 설정
+          # 주의: m 플래그 없이 사용하여 .가 개행을 매칭하지 않도록 함
+          content.gsub!(
+            /^# proxy:\s*\n#\s+ssl:\s*true\s*\n#\s+host:\s*\S+/,
+            "proxy:\n  ssl: true\n  host: #{final_domain}"
+          )
         else
-          # proxy 섹션이 없으면 추가
-          proxy_config = "\n# Proxy configuration\nproxy:\n  ssl: true\n  host: #{final_domain}\n"
-          content += proxy_config
+          # proxy 섹션이 없음 - registry 섹션 앞에 추가
+          proxy_config = "proxy:\n  ssl: true\n  host: #{final_domain}\n\n"
+          if content.match?(/^# Where you keep your container images/m)
+            content.gsub!(/^# Where you keep your container images/, "#{proxy_config}# Where you keep your container images")
+          else
+            # registry 섹션 앞에 추가
+            content.gsub!(/^registry:/, "#{proxy_config}registry:")
+          end
         end
 
         # servers 설정 업데이트

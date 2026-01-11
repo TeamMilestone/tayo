@@ -4,6 +4,26 @@
 
 이 프로젝트는 [Semantic Versioning](https://semver.org/lang/ko/)을 따릅니다.
 
+## [0.3.0] - 2025-01-11
+
+### 제거됨
+- `tayo proxy` 명령어 제거 - Kamal이 자동으로 Kamal Proxy를 관리하므로 불필요
+
+### 개선됨
+- **tayo cf**: Cloudflare 토큰 저장 및 재사용 기능
+  - 환경변수 `CLOUDFLARE_API_TOKEN` 지원
+  - `~/.config/tayo/cloudflare_token`에 토큰 자동 저장
+  - 저장된 토큰 유효성 검사 후 재사용
+- **tayo cf**: 홈서버 정보 저장 및 재사용 기능
+  - `~/.config/tayo/server.yml`에 서버 정보 저장
+  - 저장된 정보 표시 후 사용 여부 확인
+- **tayo gh**: deploy.yml 설정 버그 수정
+  - 주석 처리된 registry username/password 활성화 수정
+  - image 이름에서 ghcr.io 중복 제거
+- **tayo gh**: .kamal/secrets 설정 개선
+  - `KAMAL_REGISTRY_PASSWORD=$(gh auth token)` 형식으로 동적 토큰 사용
+  - 주석 처리된 라인과 실제 설정 라인 구분
+
 ## [0.2.0] - 2024-12-28
 
 ### 추가됨
@@ -61,6 +81,7 @@
   - 도메인 Zone 자동 감지
   - DNS A 레코드 생성/업데이트
 
+[0.3.0]: https://github.com/TeamMilestone/tayo/compare/v0.2.3...v0.3.0
 [0.2.0]: https://github.com/TeamMilestone/tayo/compare/v0.1.11...v0.2.0
 [0.1.11]: https://github.com/TeamMilestone/tayo/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/TeamMilestone/tayo/compare/v0.1.0...v0.1.10

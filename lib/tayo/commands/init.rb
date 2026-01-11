@@ -93,8 +93,21 @@ module Tayo
 
         puts "🎨 Welcome 페이지를 생성합니다...".colorize(:yellow)
 
-        # Welcome 컨트롤러 생성
-        system("rails generate controller Welcome index --skip-routes --no-helper --no-assets")
+        # Welcome 컨트롤러 생성 시도
+        unless system("rails generate controller Welcome index --skip-routes --no-helper --no-assets")
+          puts "   ⚠️  rails generate 실패. 수동으로 파일을 생성합니다.".colorize(:yellow)
+          # 디렉토리와 컨트롤러 파일 직접 생성
+          FileUtils.mkdir_p("app/controllers")
+          FileUtils.mkdir_p("app/views/welcome")
+
+          controller_content = <<~RUBY
+            class WelcomeController < ApplicationController
+              def index
+              end
+            end
+          RUBY
+          File.write("app/controllers/welcome_controller.rb", controller_content)
+        end
 
         # 프로젝트 이름 가져오기
         project_name = File.basename(Dir.pwd).gsub(/[-_]/, ' ').split.map(&:capitalize).join(' ')

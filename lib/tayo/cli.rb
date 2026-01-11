@@ -5,7 +5,6 @@ require "colorize"
 require_relative "commands/init"
 require_relative "commands/gh"
 require_relative "commands/cf"
-require_relative "commands/proxy"
 require_relative "commands/sqlite"
 
 module Tayo
@@ -23,11 +22,6 @@ module Tayo
     desc "cf", "Cloudflare DNS를 설정하여 홈서버에 도메인을 연결합니다"
     def cf
       Commands::Cf.new.execute
-    end
-
-    desc "proxy", "Traefik을 설정하여 도메인 라우팅과 SSL을 관리합니다"
-    def proxy
-      Commands::Proxy.new.execute
     end
 
     desc "sqlite", "SQLite + Solid Cable 최적화 설정을 적용합니다"

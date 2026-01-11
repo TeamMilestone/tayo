@@ -177,44 +177,48 @@ module Tayo
       def create_github_repository
         repo_name = File.basename(Dir.pwd)
         username = `gh api user -q .login`.strip
-        
+
         # 조직 목록 가져오기
         orgs_json = `gh api user/orgs -q '.[].login' 2>/dev/null`
         orgs = orgs_json.strip.split("\n").reject(&:empty?)
-        
+
         owner = username
-        
+
         if orgs.any?
           prompt = TTY::Prompt.new
           choices = ["#{username} (개인 계정)"] + orgs.map { |org| "#{org} (조직)" }
-          
+
           selection = prompt.select("🏢 저장소를 생성할 위치를 선택하세요:", choices)
-          
+
           if selection != "#{username} (개인 계정)"
             owner = selection.split(" ").first
           end
         end
-        
+
+        @repo_name = repo_name
+        @username = owner
+
         # 저장소 존재 여부 확인
         repo_exists = system("gh repo view #{owner}/#{repo_name}", out: File::NULL, err: File::NULL)
-        
+
         if repo_exists
           puts "ℹ️  GitHub 저장소가 이미 존재합니다: https://github.com/#{owner}/#{repo_name}".colorize(:yellow)
-          @repo_name = repo_name
-          @username = owner
+          # remote 설정 확인 및 업데이트
+          setup_git_remote(owner, repo_name)
         else
+          # 기존 origin remote 제거 (있다면)
+          system("git remote remove origin 2>/dev/null")
+
           create_cmd = if owner == username
             "gh repo create #{repo_name} --private --source=. --remote=origin --push"
           else
             "gh repo create #{owner}/#{repo_name} --private --source=. --remote=origin --push"
           end
-          
+
           result = system(create_cmd)
-          
+
           if result
             puts "✅ GitHub 저장소를 생성했습니다: https://github.com/#{owner}/#{repo_name}".colorize(:green)
-            @repo_name = repo_name
-            @username = owner
           else
             puts "❌ GitHub 저장소 생성에 실패했습니다.".colorize(:red)
             exit 1
@@ -222,13 +226,38 @@ module Tayo
         end
       end
 
+      def setup_git_remote(owner, repo_name)
+        remote_url = "git@github.com:#{owner}/#{repo_name}.git"
+        current_remote = `git remote get-url origin 2>/dev/null`.strip
+
+        if current_remote.empty?
+          # origin이 없으면 추가
+          system("git remote add origin #{remote_url}")
+          puts "   ✅ remote origin을 추가했습니다.".colorize(:green)
+        elsif current_remote != remote_url && !current_remote.include?("#{owner}/#{repo_name}")
+          # origin이 다른 저장소를 가리키면 업데이트
+          system("git remote set-url origin #{remote_url}")
+          puts "   ✅ remote origin을 업데이트했습니다.".colorize(:green)
+        else
+          puts "   ✅ remote origin이 올바르게 설정되어 있습니다.".colorize(:green)
+        end
+
+        # push 되지 않은 커밋이 있으면 push
+        unpushed = `git log origin/main..HEAD 2>/dev/null`.strip
+        if !unpushed.empty? || !system("git rev-parse origin/main", out: File::NULL, err: File::NULL)
+          puts "   📤 변경사항을 push합니다...".colorize(:yellow)
+          system("git push -u origin main")
+        end
+      end
+
       def create_container_registry
         # Docker 이미지 태그는 소문자여야 함
-        registry_url = "ghcr.io/#{@username.downcase}/#{@repo_name.downcase}"
-        @registry_url = registry_url
+        # Kamal은 registry.server + image를 조합하므로 image에는 username/repo만 지정
+        @image_name = "#{@username.downcase}/#{@repo_name.downcase}"
+        @registry_url = "ghcr.io/#{@image_name}"  # 전체 URL (표시용)
         
         puts "✅ 컨테이너 레지스트리가 설정되었습니다.".colorize(:green)
-        puts "   URL: #{registry_url}".colorize(:gray)
+        puts "   URL: #{@registry_url}".colorize(:gray)
         puts "   ℹ️  컨테이너 레지스트리는 첫 이미지 푸시 시 자동으로 생성됩니다.".colorize(:gray)
         
         # Docker로 GitHub Container Registry에 로그인
@@ -273,31 +302,44 @@ module Tayo
 
       def update_kamal_config
         content = File.read("config/deploy.yml")
-        
-        # 이미지 설정 업데이트 (ghcr.io 중복 제거)
-        # @registry_url은 이미 ghcr.io를 포함하고 있으므로, 그대로 사용
-        content.gsub!(/^image:\s+.*$/, "image: #{@registry_url}")
-        
+
+        # 이미지 설정 업데이트
+        # Kamal은 registry.server + image를 조합하므로 image에는 username/repo만 지정
+        content.gsub!(/^image:\s+.*$/, "image: #{@image_name}")
+
         # registry 섹션 업데이트
         if content.include?("registry:")
-          # 기존 registry 섹션 수정
-          # server 라인이 주석처리되어 있는지 확인
+          # server 설정 (주석 처리된 경우 활성화)
           if content.match?(/^\s*#\s*server:/)
             content.gsub!(/^\s*#\s*server:\s*.*$/, "  server: ghcr.io")
           elsif content.match?(/^\s*server:/)
             content.gsub!(/^\s*server:\s*.*$/, "  server: ghcr.io")
-          else
-            # server 라인이 없으면 username 위에 추가
-            content.gsub!(/(\s*username:\s+)/, "  server: ghcr.io\n\\1")
           end
-          # username도 소문자로 변환
-          content.gsub!(/^\s*username:\s+.*$/, "  username: #{@username.downcase}")
+
+          # username 설정 (주석 처리된 경우 활성화)
+          if content.match?(/^\s*#\s*username:/)
+            content.gsub!(/^\s*#\s*username:\s*.*$/, "  username: #{@username.downcase}")
+          elsif content.match?(/^\s*username:/)
+            content.gsub!(/^\s*username:\s*.*$/, "  username: #{@username.downcase}")
+          else
+            # username이 없으면 server 다음에 추가
+            content.gsub!(/(^\s*server:\s*ghcr\.io\s*$)/, "\\1\n  username: #{@username.downcase}")
+          end
+
+          # password 설정 (주석 처리된 경우 활성화)
+          # 형식: "  # password:\n  #   - KAMAL_REGISTRY_PASSWORD"
+          if content.match?(/^(\s*)#\s*password:\s*\n\s*#\s+-\s*KAMAL_REGISTRY_PASSWORD/m)
+            content.gsub!(
+              /^(\s*)#\s*password:\s*\n\s*#\s+-\s*KAMAL_REGISTRY_PASSWORD/m,
+              "\\1password:\n\\1  - KAMAL_REGISTRY_PASSWORD"
+            )
+          end
         else
           # registry 섹션 추가
           registry_config = "\n# Container registry configuration\nregistry:\n  server: ghcr.io\n  username: #{@username.downcase}\n  password:\n    - KAMAL_REGISTRY_PASSWORD\n"
           content.gsub!(/^# Credentials for your image host\.\nregistry:.*?^$/m, registry_config)
         end
-        
+
         File.write("config/deploy.yml", content)
         
         # GitHub 토큰을 Kamal secrets 파일에 설정
@@ -312,35 +354,28 @@ module Tayo
       def setup_kamal_secrets
         # .kamal 디렉토리 생성
         Dir.mkdir(".kamal") unless Dir.exist?(".kamal")
-        
-        # 현재 GitHub 토큰 가져오기
-        token_output = `gh auth token 2>/dev/null`
-        
-        if $?.success? && !token_output.strip.empty?
-          token = token_output.strip
-          secrets_file = ".kamal/secrets"
-          
-          # 기존 secrets 파일 읽기 (있다면)
-          existing_content = File.exist?(secrets_file) ? File.read(secrets_file) : ""
-          
-          # KAMAL_REGISTRY_PASSWORD가 이미 있는지 확인
-          if existing_content.include?("KAMAL_REGISTRY_PASSWORD")
-            # 기존 값 업데이트
-            updated_content = existing_content.gsub(/^KAMAL_REGISTRY_PASSWORD=.*$/, "KAMAL_REGISTRY_PASSWORD=#{token}")
-          else
-            # 새로 추가
-            updated_content = existing_content.empty? ? "KAMAL_REGISTRY_PASSWORD=#{token}\n" : "#{existing_content.chomp}\nKAMAL_REGISTRY_PASSWORD=#{token}\n"
-          end
-          
-          File.write(secrets_file, updated_content)
-          puts "✅ GitHub 토큰이 .kamal/secrets에 설정되었습니다.".colorize(:green)
-          
-          # .gitignore에 secrets 파일 추가
-          add_to_gitignore(".kamal/secrets")
+
+        secrets_file = ".kamal/secrets"
+
+        # 기존 secrets 파일 읽기 (있다면)
+        existing_content = File.exist?(secrets_file) ? File.read(secrets_file) : ""
+
+        # KAMAL_REGISTRY_PASSWORD가 실제로 설정되어 있는지 확인 (주석 제외)
+        password_line = 'KAMAL_REGISTRY_PASSWORD=$(gh auth token)'
+
+        if existing_content.match?(/^KAMAL_REGISTRY_PASSWORD=/)
+          # 기존 값 업데이트
+          updated_content = existing_content.gsub(/^KAMAL_REGISTRY_PASSWORD=.*$/, password_line)
         else
-          puts "⚠️  GitHub 토큰을 가져올 수 없습니다. 수동으로 설정해주세요:".colorize(:yellow)
-          puts "   echo 'KAMAL_REGISTRY_PASSWORD=your_github_token' >> .kamal/secrets".colorize(:cyan)
+          # 새로 추가 (파일 끝에)
+          updated_content = "#{existing_content.chomp}\n#{password_line}\n"
         end
+
+        File.write(secrets_file, updated_content)
+        puts "✅ KAMAL_REGISTRY_PASSWORD가 .kamal/secrets에 설정되었습니다.".colorize(:green)
+
+        # .gitignore에 secrets 파일 추가
+        add_to_gitignore(".kamal/secrets")
       end
       
       def add_to_gitignore(file_path)
